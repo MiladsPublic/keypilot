@@ -31,18 +31,34 @@ public sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
             .HasMaxLength(32)
             .IsRequired();
 
-        builder.Property(property => property.OfferAcceptedDate)
-            .HasColumnName("offer_accepted_date");
+        builder.Property(property => property.AcceptedOfferDate)
+            .HasColumnName("accepted_offer_date")
+            .IsRequired();
 
         builder.Property(property => property.SettlementDate)
-            .HasColumnName("settlement_date");
+            .HasColumnName("settlement_date")
+            .IsRequired();
 
         builder.Property(property => property.PurchasePrice)
             .HasColumnName("purchase_price")
             .HasColumnType("numeric(12,2)");
 
+        builder.Property(property => property.DepositAmount)
+            .HasColumnName("deposit_amount")
+            .HasColumnType("numeric(12,2)");
+
         builder.Property(property => property.CreatedAtUtc)
             .HasColumnName("created_at_utc")
             .IsRequired();
+
+        builder.HasMany(property => property.Conditions)
+            .WithOne()
+            .HasForeignKey(condition => condition.PropertyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(property => property.Tasks)
+            .WithOne()
+            .HasForeignKey(task => task.PropertyId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

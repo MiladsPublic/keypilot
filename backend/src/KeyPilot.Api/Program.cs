@@ -1,4 +1,6 @@
+using KeyPilot.Api.Endpoints.Conditions;
 using KeyPilot.Api.Endpoints.Properties;
+using KeyPilot.Api.Endpoints.Tasks;
 using KeyPilot.Api.Extensions;
 using KeyPilot.Application;
 using KeyPilot.Infrastructure;
@@ -25,6 +27,13 @@ app.MapHealthChecks("/health");
 var propertyGroup = app.MapGroup("/api/v1/properties").WithTags("Properties");
 CreatePropertyEndpoint.Map(propertyGroup);
 GetPropertyEndpoint.Map(propertyGroup);
+SettlePropertyEndpoint.Map(propertyGroup);
+
+var taskGroup = app.MapGroup("/api/v1/tasks").WithTags("Tasks");
+CompleteTaskEndpoint.Map(taskGroup);
+
+var conditionGroup = app.MapGroup("/api/v1/conditions").WithTags("Conditions");
+CompleteConditionEndpoint.Map(conditionGroup);
 
 app.Run();
 

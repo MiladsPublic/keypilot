@@ -8,5 +8,9 @@ public interface IApplicationDbContext
 
     Task<Property?> GetPropertyByIdAsync(Guid id, CancellationToken cancellationToken);
 
+    Task<Condition?> GetConditionByIdAsync(Guid id, CancellationToken cancellationToken);
+
+    Task<PropertyTask?> GetTaskByIdAsync(Guid id, CancellationToken cancellationToken);
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

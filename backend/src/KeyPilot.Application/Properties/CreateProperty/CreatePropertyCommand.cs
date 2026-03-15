@@ -2,8 +2,15 @@ using MediatR;
 
 namespace KeyPilot.Application.Properties.CreateProperty;
 
+public sealed record CreatePropertyConditionInput(
+    string Type,
+    int? DaysFromAcceptedOffer,
+    DateOnly? DueDate);
+
 public sealed record CreatePropertyCommand(
     string Address,
-    DateOnly? OfferAcceptedDate,
-    DateOnly? SettlementDate,
-    decimal? PurchasePrice) : IRequest<CreatePropertyResponse>;
+    DateOnly AcceptedOfferDate,
+    DateOnly SettlementDate,
+    decimal? PurchasePrice,
+    decimal? DepositAmount,
+    IReadOnlyCollection<CreatePropertyConditionInput>? Conditions) : IRequest<CreatePropertyResponse>;

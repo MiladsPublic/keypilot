@@ -26,9 +26,17 @@ export function CreatePropertyForm() {
     resolver: zodResolver(createPropertySchema),
     defaultValues: {
       address: "",
-      offerAcceptedDate: "",
+      acceptedOfferDate: "",
       settlementDate: "",
-      purchasePrice: ""
+      purchasePrice: "",
+      depositAmount: "",
+      conditions: {
+        finance: true,
+        building_report: false,
+        lim: false,
+        insurance: false,
+        solicitor_approval: false
+      }
     }
   });
 
@@ -69,9 +77,9 @@ export function CreatePropertyForm() {
           <div className="grid gap-5 md:grid-cols-2">
             <label className="block space-y-2">
               <span className="text-sm font-medium text-ink/80">Offer accepted date</span>
-              <Input type="date" {...register("offerAcceptedDate")} />
-              {errors.offerAcceptedDate ? (
-                <p className="text-sm text-red-700">{errors.offerAcceptedDate.message}</p>
+              <Input type="date" {...register("acceptedOfferDate")} />
+              {errors.acceptedOfferDate ? (
+                <p className="text-sm text-red-700">{errors.acceptedOfferDate.message}</p>
               ) : null}
             </label>
 
@@ -91,6 +99,40 @@ export function CreatePropertyForm() {
               <p className="text-sm text-red-700">{errors.purchasePrice.message}</p>
             ) : null}
           </label>
+
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-ink/80">Deposit amount (optional)</span>
+            <Input inputMode="decimal" placeholder="200000" {...register("depositAmount")} />
+            {errors.depositAmount ? (
+              <p className="text-sm text-red-700">{errors.depositAmount.message}</p>
+            ) : null}
+          </label>
+
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-medium text-ink/80">Conditions</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="flex items-center gap-2 rounded-2xl border border-line bg-canvas px-3 py-2 text-sm">
+                <input type="checkbox" {...register("conditions.finance")} />
+                Finance
+              </label>
+              <label className="flex items-center gap-2 rounded-2xl border border-line bg-canvas px-3 py-2 text-sm">
+                <input type="checkbox" {...register("conditions.building_report")} />
+                Building report
+              </label>
+              <label className="flex items-center gap-2 rounded-2xl border border-line bg-canvas px-3 py-2 text-sm">
+                <input type="checkbox" {...register("conditions.lim")} />
+                LIM
+              </label>
+              <label className="flex items-center gap-2 rounded-2xl border border-line bg-canvas px-3 py-2 text-sm">
+                <input type="checkbox" {...register("conditions.insurance")} />
+                Insurance
+              </label>
+              <label className="flex items-center gap-2 rounded-2xl border border-line bg-canvas px-3 py-2 text-sm sm:col-span-2">
+                <input type="checkbox" {...register("conditions.solicitor_approval")} />
+                Solicitor approval
+              </label>
+            </div>
+          </fieldset>
 
           {mutation.isError ? (
             <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">

@@ -1,4 +1,5 @@
 using FluentValidation;
+using KeyPilot.Application.Properties.TaskGeneration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace KeyPilot.Application;
@@ -12,6 +13,7 @@ public static class DependencyInjection
             configuration.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly);
         });
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
+        services.AddScoped<ITaskTemplateService, TaskTemplateService>();
 
         return services;
     }

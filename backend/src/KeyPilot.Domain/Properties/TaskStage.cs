@@ -1,10 +1,10 @@
 namespace KeyPilot.Domain.Properties;
 
-public enum PropertyStatus
+public enum TaskStage
 {
     AcceptedOffer = 0,
     Conditional = 1,
     Unconditional = 2,
     PreSettlement = 3,
-    Settled = 4
+    Settlement = 4
 }

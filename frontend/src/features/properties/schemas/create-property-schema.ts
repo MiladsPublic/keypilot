@@ -1,22 +1,26 @@
 import { z } from "zod";
 
-const optionalDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD").or(z.literal(""));
+const requiredDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD");
 const optionalMoney = z.string().regex(/^\d+(\.\d{1,2})?$/, "Use a valid amount").or(z.literal(""));
 
 export const createPropertySchema = z
   .object({
     address: z.string().trim().min(3, "Address is required"),
-    offerAcceptedDate: optionalDate.optional(),
-    settlementDate: optionalDate.optional(),
-    purchasePrice: optionalMoney.optional()
+    acceptedOfferDate: requiredDate,
+    settlementDate: requiredDate,
+    purchasePrice: optionalMoney.optional(),
+    depositAmount: optionalMoney.optional(),
+    conditions: z.object({
+      finance: z.boolean(),
+      building_report: z.boolean(),
+      lim: z.boolean(),
+      insurance: z.boolean(),
+      solicitor_approval: z.boolean()
+    })
   })
   .refine(
     (value) => {
-      if (!value.offerAcceptedDate || !value.settlementDate) {
-        return true;
-      }
-
-      return value.settlementDate >= value.offerAcceptedDate;
+      return value.settlementDate >= value.acceptedOfferDate;
     },
     {
       message: "Settlement date must be on or after the offer accepted date",

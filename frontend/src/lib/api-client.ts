@@ -32,5 +32,10 @@ export const apiClient = {
     request<TResponse>(path, {
       method: "POST",
       body: JSON.stringify(body)
+    }),
+  patch: <TResponse, TBody = undefined>(path: string, body?: TBody) =>
+    request<TResponse>(path, {
+      method: "PATCH",
+      body: body === undefined ? undefined : JSON.stringify(body)
     })
 };
