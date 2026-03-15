@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/KeyPilot.Api/KeyPilot.Api.csproj" />
+    <Project Path="src/KeyPilot.Application/KeyPilot.Application.csproj" />
+    <Project Path="src/KeyPilot.Domain/KeyPilot.Domain.csproj" />
+    <Project Path="src/KeyPilot.Infrastructure/KeyPilot.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/KeyPilot.Api.Tests/KeyPilot.Api.Tests.csproj" />
+  </Folder>
+</Solution>

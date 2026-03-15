@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: keypilot-postgres
+    environment:
+      POSTGRES_DB: keypilot
+      POSTGRES_USER: keypilot
+      POSTGRES_PASSWORD: keypilot
+    ports:
+      - "5433:5432"
+    volumes:
+      - keypilot-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  keypilot-postgres-data:

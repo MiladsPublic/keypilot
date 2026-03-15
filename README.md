@@ -17,7 +17,7 @@ Frontend
 - TailwindCSS
 
 Backend
-- .NET 8 Modular Monolith API
+- .NET 10 Modular Monolith API
 
 Data
 - Postgres
@@ -31,3 +31,9 @@ Notifications
 ## Project Goal
 
 Help buyers manage the process from **offer acceptance → settlement** without the chaos of email, spreadsheets, and PDFs.
+
+## Local Ports
+
+- Postgres host port: `5433`
+- API base URL: `http://localhost:8081`
+- Frontend URL: `http://localhost:3000`

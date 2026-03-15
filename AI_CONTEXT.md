@@ -15,7 +15,7 @@ Frontend
 - Next.js (TypeScript)
 
 Backend
-- .NET 8 API
+- .NET 10 API
 
 Database
 - Postgres

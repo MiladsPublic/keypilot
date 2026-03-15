@@ -1,0 +1,15 @@
+node_modules/
+.next/
+dist/
+coverage/
+
+**/bin/
+**/obj/
+
+.DS_Store
+*.user
+*.suo
+*.swp
+
+.env
+.env.local

@@ -13,7 +13,7 @@ Rules:
 
 ## Backend
 
-Runtime: .NET 8
+Runtime: .NET 10
 
 Architecture:
 - Vertical slice architecture
