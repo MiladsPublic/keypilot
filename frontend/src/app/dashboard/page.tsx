@@ -1,11 +1,17 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 import { getProperties } from "@/features/properties/api/get-properties";
 
 export default async function DashboardPage() {
   const { getToken } = await auth();
   const token = await getToken();
+
+  if (!token) {
+    redirect("/sign-in");
+  }
+
   const properties = await getProperties(token);
 
   return (

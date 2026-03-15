@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 
 import { PropertySummaryCard } from "@/components/properties/property-summary-card";
@@ -16,6 +16,10 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
   const { id } = await params;
   const { getToken } = await auth();
   const token = await getToken();
+
+  if (!token) {
+    redirect("/sign-in");
+  }
 
   try {
     const property = await getProperty(id, token);
