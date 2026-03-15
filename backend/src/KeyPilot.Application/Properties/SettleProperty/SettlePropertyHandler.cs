@@ -9,7 +9,7 @@ public sealed class SettlePropertyHandler(IApplicationDbContext dbContext)
 {
     public async Task<PropertyDto?> Handle(SettlePropertyCommand request, CancellationToken cancellationToken)
     {
-        var property = await dbContext.GetPropertyByIdAsync(request.Id, cancellationToken);
+        var property = await dbContext.GetPropertyByIdAsync(request.Id, request.OwnerUserId, cancellationToken);
 
         if (property is null)
         {

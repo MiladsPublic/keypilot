@@ -23,6 +23,11 @@ public sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
             .HasMaxLength(250)
             .IsRequired();
 
+        builder.Property(property => property.OwnerUserId)
+            .HasColumnName("owner_user_id")
+            .HasMaxLength(128)
+            .IsRequired();
+
         builder.Property(property => property.Status)
             .HasColumnName("status")
             .HasConversion(
@@ -60,5 +65,7 @@ public sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
             .WithOne()
             .HasForeignKey(task => task.PropertyId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(property => property.OwnerUserId);
     }
 }

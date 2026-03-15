@@ -13,4 +13,5 @@ public sealed record CreatePropertyCommand(
     DateOnly SettlementDate,
     decimal? PurchasePrice,
     decimal? DepositAmount,
-    IReadOnlyCollection<CreatePropertyConditionInput>? Conditions) : IRequest<CreatePropertyResponse>;
+    IReadOnlyCollection<CreatePropertyConditionInput>? Conditions,
+    string OwnerUserId) : IRequest<CreatePropertyResponse>;

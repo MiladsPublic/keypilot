@@ -11,14 +11,14 @@ public sealed class CompleteConditionHandler(
 {
     public async Task<ConditionDto?> Handle(CompleteConditionCommand request, CancellationToken cancellationToken)
     {
-        var condition = await dbContext.GetConditionByIdAsync(request.Id, cancellationToken);
+        var condition = await dbContext.GetConditionByIdAsync(request.Id, request.OwnerUserId, cancellationToken);
 
         if (condition is null)
         {
             return null;
         }
 
-        var property = await dbContext.GetPropertyByIdAsync(condition.PropertyId, cancellationToken);
+        var property = await dbContext.GetPropertyByIdAsync(condition.PropertyId, request.OwnerUserId, cancellationToken);
 
         if (property is null)
         {

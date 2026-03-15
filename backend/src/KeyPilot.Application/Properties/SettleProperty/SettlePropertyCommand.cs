@@ -3,4 +3,4 @@ using MediatR;
 
 namespace KeyPilot.Application.Properties.SettleProperty;
 
-public sealed record SettlePropertyCommand(Guid Id) : IRequest<PropertyDto?>;
+public sealed record SettlePropertyCommand(Guid Id, string OwnerUserId) : IRequest<PropertyDto?>;

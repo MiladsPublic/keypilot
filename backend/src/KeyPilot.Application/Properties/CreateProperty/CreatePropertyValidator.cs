@@ -19,6 +19,9 @@ public sealed class CreatePropertyValidator : AbstractValidator<CreatePropertyCo
             .NotEmpty()
             .MaximumLength(250);
 
+        RuleFor(x => x.OwnerUserId)
+            .NotEmpty();
+
         RuleFor(x => x.AcceptedOfferDate)
             .NotEmpty();
 

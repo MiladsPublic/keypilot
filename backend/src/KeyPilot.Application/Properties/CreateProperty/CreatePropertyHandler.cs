@@ -30,6 +30,7 @@ public sealed class CreatePropertyHandler(
             request.SettlementDate,
             request.PurchasePrice,
             request.DepositAmount,
+            request.OwnerUserId,
             workspaceId: null,
             createdAtUtc: createdAtUtc);
 

@@ -1,7 +1,9 @@
+using KeyPilot.Api.Auth;
 using KeyPilot.Application.Conditions.CompleteCondition;
 using KeyPilot.Application.Properties.Common;
 using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
+using System.Security.Claims;
 
 namespace KeyPilot.Api.Endpoints.Conditions;
 
@@ -13,15 +15,24 @@ public static class CompleteConditionEndpoint
             .WithName("CompleteCondition")
             .WithSummary("Mark a condition complete.")
             .Produces<ConditionDto>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status404NotFound);
     }
 
-    private static async Task<Results<Ok<ConditionDto>, NotFound>> HandleAsync(
+    private static async Task<Results<Ok<ConditionDto>, NotFound, UnauthorizedHttpResult>> HandleAsync(
         Guid id,
+        ClaimsPrincipal user,
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var result = await sender.Send(new CompleteConditionCommand(id), cancellationToken);
+        var ownerUserId = user.GetCurrentUserId();
+
+        if (string.IsNullOrWhiteSpace(ownerUserId))
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        var result = await sender.Send(new CompleteConditionCommand(id, ownerUserId), cancellationToken);
 
         return result is null
             ? TypedResults.NotFound()

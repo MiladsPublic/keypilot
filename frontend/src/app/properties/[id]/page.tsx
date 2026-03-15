@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 
 import { PropertySummaryCard } from "@/components/properties/property-summary-card";
 import { getProperty } from "@/features/properties/api/get-property";
@@ -13,9 +14,11 @@ type PropertyPageProps = {
 
 export default async function PropertyPage({ params }: PropertyPageProps) {
   const { id } = await params;
+  const { getToken } = await auth();
+  const token = await getToken();
 
   try {
-    const property = await getProperty(id);
+    const property = await getProperty(id, token);
 
     return (
       <div className="mx-auto max-w-4xl space-y-6">

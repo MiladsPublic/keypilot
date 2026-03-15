@@ -17,6 +17,7 @@ public sealed class Property : AuditableEntity
         DateOnly settlementDate,
         decimal? purchasePrice,
         decimal? depositAmount,
+        string ownerUserId,
         Guid? workspaceId,
         DateTime createdAtUtc)
     {
@@ -25,12 +26,15 @@ public sealed class Property : AuditableEntity
         SettlementDate = settlementDate;
         PurchasePrice = purchasePrice;
         DepositAmount = depositAmount;
+        OwnerUserId = ownerUserId;
         WorkspaceId = workspaceId;
         Status = PropertyStatus.AcceptedOffer;
         CreatedAtUtc = createdAtUtc;
     }
 
     public Guid? WorkspaceId { get; private set; }
+
+    public string OwnerUserId { get; private set; } = string.Empty;
 
     public string Address { get; private set; } = string.Empty;
 
@@ -54,6 +58,7 @@ public sealed class Property : AuditableEntity
         DateOnly settlementDate,
         decimal? purchasePrice,
         decimal? depositAmount,
+        string ownerUserId,
         Guid? workspaceId,
         DateTime createdAtUtc)
     {
@@ -63,6 +68,7 @@ public sealed class Property : AuditableEntity
             settlementDate,
             purchasePrice,
             depositAmount,
+            ownerUserId,
             workspaceId,
             createdAtUtc);
     }

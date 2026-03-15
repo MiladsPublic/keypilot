@@ -22,7 +22,7 @@ const conditionOffsets: Record<string, number> = {
   solicitor_approval: 5
 };
 
-export async function createProperty(values: CreatePropertyFormValues): Promise<Property> {
+export async function createProperty(values: CreatePropertyFormValues, token?: string | null): Promise<Property> {
   const conditions = Object.entries(values.conditions)
     .filter(([, selected]) => selected)
     .map(([type]) => ({
@@ -37,5 +37,5 @@ export async function createProperty(values: CreatePropertyFormValues): Promise<
     purchasePrice: values.purchasePrice ? Number(values.purchasePrice) : null,
     depositAmount: values.depositAmount ? Number(values.depositAmount) : null,
     conditions
-  });
+  }, token);
 }

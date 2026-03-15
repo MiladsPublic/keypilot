@@ -1,5 +1,9 @@
 import { config } from "@/lib/config";
 
+type ApiRequestInit = RequestInit & {
+  token?: string | null;
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -9,11 +13,14 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function request<T>(path: string, init?: ApiRequestInit): Promise<T> {
+  const token = init?.token;
+
   const response = await fetch(`${config.apiBaseUrl}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init?.headers ?? {})
     },
     cache: "no-store"
@@ -27,15 +34,17 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const apiClient = {
-  get: <T>(path: string) => request<T>(path),
-  post: <TResponse, TBody>(path: string, body: TBody) =>
+  get: <T>(path: string, token?: string | null) => request<T>(path, { token }),
+  post: <TResponse, TBody>(path: string, body: TBody, token?: string | null) =>
     request<TResponse>(path, {
       method: "POST",
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      token
     }),
-  patch: <TResponse, TBody = undefined>(path: string, body?: TBody) =>
+  patch: <TResponse, TBody = undefined>(path: string, body?: TBody, token?: string | null) =>
     request<TResponse>(path, {
       method: "PATCH",
-      body: body === undefined ? undefined : JSON.stringify(body)
+      body: body === undefined ? undefined : JSON.stringify(body),
+      token
     })
 };

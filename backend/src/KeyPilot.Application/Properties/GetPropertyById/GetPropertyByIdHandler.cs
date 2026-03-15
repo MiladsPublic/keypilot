@@ -8,7 +8,7 @@ public sealed class GetPropertyByIdHandler(IApplicationDbContext dbContext)
 {
     public async Task<PropertyDto?> Handle(GetPropertyByIdQuery request, CancellationToken cancellationToken)
     {
-        var property = await dbContext.GetPropertyByIdAsync(request.Id, cancellationToken);
+        var property = await dbContext.GetPropertyByIdAsync(request.Id, request.OwnerUserId, cancellationToken);
 
         return property is null ? null : PropertyDto.FromProperty(property);
     }

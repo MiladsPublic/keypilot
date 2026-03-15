@@ -3,4 +3,4 @@ using MediatR;
 
 namespace KeyPilot.Application.Tasks.CompleteTask;
 
-public sealed record CompleteTaskCommand(Guid Id) : IRequest<TaskDto?>;
+public sealed record CompleteTaskCommand(Guid Id, string OwnerUserId) : IRequest<TaskDto?>;

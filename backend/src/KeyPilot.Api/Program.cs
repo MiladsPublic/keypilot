@@ -8,13 +8,15 @@ using KeyPilot.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-    .AddApiServices()
+    .AddApiServices(builder.Configuration)
     .AddApplication()
     .AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
 app.UseCors("Frontend");
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
@@ -24,15 +26,15 @@ if (app.Environment.IsDevelopment())
 
 app.MapHealthChecks("/health");
 
-var propertyGroup = app.MapGroup("/api/v1/properties").WithTags("Properties");
+var propertyGroup = app.MapGroup("/api/v1/properties").WithTags("Properties").RequireAuthorization();
 CreatePropertyEndpoint.Map(propertyGroup);
 GetPropertyEndpoint.Map(propertyGroup);
 SettlePropertyEndpoint.Map(propertyGroup);
 
-var taskGroup = app.MapGroup("/api/v1/tasks").WithTags("Tasks");
+var taskGroup = app.MapGroup("/api/v1/tasks").WithTags("Tasks").RequireAuthorization();
 CompleteTaskEndpoint.Map(taskGroup);
 
-var conditionGroup = app.MapGroup("/api/v1/conditions").WithTags("Conditions");
+var conditionGroup = app.MapGroup("/api/v1/conditions").WithTags("Conditions").RequireAuthorization();
 CompleteConditionEndpoint.Map(conditionGroup);
 
 app.Run();

@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
+import { useAuth } from "@clerk/nextjs";
 import { CalendarClock, CheckCircle2, ListTodo, MapPinHouse, Wallet } from "lucide-react";
 
 import { completeCondition } from "@/features/properties/api/complete-condition";
@@ -41,19 +42,20 @@ function formatCurrency(value: number | null) {
 
 export function PropertySummaryCard({ property }: { property: Property }) {
   const router = useRouter();
+  const { getToken } = useAuth();
 
   const taskMutation = useMutation({
-    mutationFn: completeTask,
+    mutationFn: async (id: string) => completeTask(id, await getToken()),
     onSuccess: () => router.refresh()
   });
 
   const conditionMutation = useMutation({
-    mutationFn: completeCondition,
+    mutationFn: async (id: string) => completeCondition(id, await getToken()),
     onSuccess: () => router.refresh()
   });
 
   const settleMutation = useMutation({
-    mutationFn: settleProperty,
+    mutationFn: async (id: string) => settleProperty(id, await getToken()),
     onSuccess: () => router.refresh()
   });
 

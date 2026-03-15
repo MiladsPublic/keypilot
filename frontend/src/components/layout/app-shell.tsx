@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Show, SignInButton, SignOutButton, SignUpButton, UserButton } from "@clerk/nextjs";
 
 import { MobileNav } from "@/components/layout/mobile-nav";
 
@@ -9,9 +10,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Link href="/" className="text-sm font-semibold uppercase tracking-[0.2em] text-ink/80">
           KeyPilot
         </Link>
-        <Link href="/properties/new" className="hidden text-sm font-medium text-ink/70 md:inline">
-          Create property
-        </Link>
+        <div className="hidden items-center gap-4 md:flex">
+          <Show when="signed-in">
+            <Link href="/dashboard" className="text-sm font-medium text-ink/70">
+              Dashboard
+            </Link>
+            <Link href="/properties/new" className="text-sm font-medium text-ink/70">
+              Create property
+            </Link>
+            <UserButton />
+            <SignOutButton>
+              <button type="button" className="text-sm font-medium text-ink/70">
+                Sign out
+              </button>
+            </SignOutButton>
+          </Show>
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <button type="button" className="text-sm font-medium text-ink/70">
+                Sign in
+              </button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button type="button" className="rounded-full bg-ink px-3 py-2 text-sm font-medium text-white">
+                Sign up
+              </button>
+            </SignUpButton>
+          </Show>
+        </div>
       </header>
 
       <main className="flex-1">{children}</main>

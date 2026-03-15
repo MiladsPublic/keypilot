@@ -16,22 +16,47 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
         await Properties.AddAsync(property, cancellationToken);
     }
 
-    public Task<Property?> GetPropertyByIdAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<Property>> ListPropertiesByOwnerAsync(string ownerUserId, CancellationToken cancellationToken)
+    {
+        return await Properties
+            .Where(property => property.OwnerUserId == ownerUserId)
+            .Include(property => property.Conditions)
+            .Include(property => property.Tasks)
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public Task<Property?> GetPropertyByIdAsync(Guid id, string ownerUserId, CancellationToken cancellationToken)
     {
         return Properties
             .Include(property => property.Conditions)
             .Include(property => property.Tasks)
-            .SingleOrDefaultAsync(property => property.Id == id, cancellationToken);
+            .SingleOrDefaultAsync(property => property.Id == id && property.OwnerUserId == ownerUserId, cancellationToken);
     }
 
-    public Task<Condition?> GetConditionByIdAsync(Guid id, CancellationToken cancellationToken)
+    public Task<Condition?> GetConditionByIdAsync(Guid id, string ownerUserId, CancellationToken cancellationToken)
     {
-        return Conditions.SingleOrDefaultAsync(condition => condition.Id == id, cancellationToken);
+        return Conditions
+            .Join(
+                Properties,
+                condition => condition.PropertyId,
+                property => property.Id,
+                (condition, property) => new { condition, property })
+            .Where(result => result.condition.Id == id && result.property.OwnerUserId == ownerUserId)
+            .Select(result => result.condition)
+            .SingleOrDefaultAsync(cancellationToken);
     }
 
-    public Task<PropertyTask?> GetTaskByIdAsync(Guid id, CancellationToken cancellationToken)
+    public Task<PropertyTask?> GetTaskByIdAsync(Guid id, string ownerUserId, CancellationToken cancellationToken)
     {
-        return Tasks.SingleOrDefaultAsync(task => task.Id == id, cancellationToken);
+        return Tasks
+            .Join(
+                Properties,
+                task => task.PropertyId,
+                property => property.Id,
+                (task, property) => new { task, property })
+            .Where(result => result.task.Id == id && result.property.OwnerUserId == ownerUserId)
+            .Select(result => result.task)
+            .SingleOrDefaultAsync(cancellationToken);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

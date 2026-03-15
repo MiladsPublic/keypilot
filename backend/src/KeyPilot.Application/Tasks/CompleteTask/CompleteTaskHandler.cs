@@ -11,7 +11,7 @@ public sealed class CompleteTaskHandler(
 {
     public async Task<TaskDto?> Handle(CompleteTaskCommand request, CancellationToken cancellationToken)
     {
-        var task = await dbContext.GetTaskByIdAsync(request.Id, cancellationToken);
+        var task = await dbContext.GetTaskByIdAsync(request.Id, request.OwnerUserId, cancellationToken);
 
         if (task is null)
         {

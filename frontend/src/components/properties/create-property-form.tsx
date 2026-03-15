@@ -3,6 +3,7 @@
 import { startTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
+import { useAuth } from "@clerk/nextjs";
 import { Home, LoaderCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +19,7 @@ import { Input } from "@/components/ui/input";
 
 export function CreatePropertyForm() {
   const router = useRouter();
+  const { getToken } = useAuth();
   const {
     register,
     handleSubmit,
@@ -41,7 +43,10 @@ export function CreatePropertyForm() {
   });
 
   const mutation = useMutation({
-    mutationFn: createProperty,
+    mutationFn: async (values: CreatePropertyFormValues) => {
+      const token = await getToken();
+      return createProperty(values, token);
+    },
     onSuccess: (property) => {
       startTransition(() => {
         router.push(`/properties/${property.id}`);
