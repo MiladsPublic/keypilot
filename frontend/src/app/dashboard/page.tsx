@@ -18,7 +18,7 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       {properties.length === 0 ? (
-        <EmptyState message="You don't have any active purchases yet." actionLabel="Create purchase" actionHref="/properties/new" />
+        <EmptyState message="You don't have any active purchases yet." actionLabel="Start a purchase" actionHref="/properties/new" />
       ) : (
         <PurchaseDashboard initialProperties={properties} />
       )}

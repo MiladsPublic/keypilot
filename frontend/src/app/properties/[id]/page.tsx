@@ -32,7 +32,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
             <h1 className="text-3xl font-semibold md:text-4xl">Purchase detail</h1>
           </div>
           <Link href="/properties/new" className="inline-flex items-center justify-center rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white">
-            Create purchase
+            Start a purchase
           </Link>
         </div>
         <PropertySummaryCard property={property} />

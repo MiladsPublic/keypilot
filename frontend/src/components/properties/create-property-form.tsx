@@ -1,12 +1,13 @@
 "use client";
 
-import { startTransition } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { Home, LoaderCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 
 import { createProperty } from "@/features/properties/api/create-property";
 import {
@@ -18,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const conditionOptions = [
   { key: "finance", label: "Finance" },
@@ -27,14 +29,18 @@ const conditionOptions = [
   { key: "solicitor_approval", label: "Solicitor approval" }
 ] as const;
 
+const DRAFT_STORAGE_KEY = "keypilot:create-purchase-draft";
+
 export function CreatePropertyForm() {
   const router = useRouter();
   const { getToken } = useAuth();
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const {
     register,
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors }
   } = useForm<CreatePropertyFormValues>({
     resolver: zodResolver(createPropertySchema),
@@ -54,12 +60,28 @@ export function CreatePropertyForm() {
     }
   });
 
+  useEffect(() => {
+    const savedDraft = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+
+    if (!savedDraft) {
+      return;
+    }
+
+    try {
+      const parsedDraft = JSON.parse(savedDraft) as CreatePropertyFormValues;
+      reset(parsedDraft);
+    } catch {
+      window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+    }
+  }, [reset]);
+
   const mutation = useMutation({
     mutationFn: async (values: CreatePropertyFormValues) => {
       const token = await getToken();
       return createProperty(values, token);
     },
     onSuccess: (property, values) => {
+      window.localStorage.removeItem(DRAFT_STORAGE_KEY);
       toast({
         title: "Purchase created",
         description: `${values.address.trim()} is ready.`,
@@ -72,14 +94,22 @@ export function CreatePropertyForm() {
     onError: (_error, values) => {
       const addressLabel = values.address.trim() || "this purchase";
       toast({
-        title: "Couldn't create purchase",
-        description: `Couldn't create ${addressLabel}. Check your details and try again.`,
+        title: "Couldn't start a purchase",
+        description: `Couldn't start ${addressLabel}. Check your details and try again.`,
         variant: "danger"
       });
     }
   });
 
   const onSubmit = handleSubmit(async (values) => {
+    const token = await getToken();
+
+    if (!token) {
+      window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(values));
+      setShowAuthPrompt(true);
+      return;
+    }
+
     await mutation.mutateAsync(values);
   });
 
@@ -94,7 +124,7 @@ export function CreatePropertyForm() {
           </div>
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-ink/65">Purchase setup</p>
-            <CardTitle>Create purchase workspace</CardTitle>
+            <CardTitle>Start a purchase workspace</CardTitle>
             <CardDescription>Start with the accepted offer, settlement date, and active conditions.</CardDescription>
           </div>
         </div>
@@ -173,20 +203,37 @@ export function CreatePropertyForm() {
 
           {mutation.isError ? (
             <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              Unable to create the property. Check the backend is running on `NEXT_PUBLIC_API_BASE_URL`.
+              Unable to start the purchase. Check the backend is running on NEXT_PUBLIC_API_BASE_URL.
             </p>
           ) : null}
 
           <div className="flex flex-wrap gap-2">
             <Button type="submit" disabled={mutation.isPending} className="rounded-full px-5">
             {mutation.isPending ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Create purchase
+            Create
             </Button>
             <Button type="button" variant="outline" className="rounded-lg" onClick={() => router.back()}>
               Cancel
             </Button>
           </div>
         </form>
+
+        <Dialog open={showAuthPrompt} onOpenChange={setShowAuthPrompt}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Save your purchase</DialogTitle>
+              <DialogDescription>To save this purchase, sign in or create an account. Your draft is saved and will be restored after you return.</DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:justify-start">
+              <Button asChild className="rounded-full">
+                <Link href="/sign-up?redirect_url=/properties/new">Sign up</Link>
+              </Button>
+              <Button asChild variant="outline" className="rounded-full">
+                <Link href="/sign-in?redirect_url=/properties/new">Sign in</Link>
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

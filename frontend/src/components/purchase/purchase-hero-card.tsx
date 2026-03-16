@@ -52,7 +52,7 @@ export function PurchaseHeroCard({ property, progressValue, canSelect, propertie
             <Button asChild className="rounded-full">
               <Link href="/properties/new">
                 <Home className="h-4 w-4" />
-                Create purchase
+                Start a purchase
               </Link>
             </Button>
           </div>

@@ -18,7 +18,7 @@ import { Separator } from "@/components/ui/separator";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/properties/new", label: "Create purchase", icon: PlusCircle }
+  { href: "/properties/new", label: "Start a purchase", icon: PlusCircle }
 ];
 
 export function AppHeader() {
@@ -78,7 +78,7 @@ export function AppHeader() {
               <Link href="/sign-in">Sign in</Link>
             </Button>
             <Button asChild size="sm" className="rounded-full px-4">
-              <Link href="/sign-up">Start a purchase</Link>
+              <Link href="/properties/new">Start a purchase</Link>
             </Button>
           </div>
         )}

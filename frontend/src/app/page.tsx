@@ -104,7 +104,7 @@ export default function HomePage() {
             <p className="text-sm text-ink/70">Keep the full purchase timeline visible from day one.</p>
           </div>
           <Button asChild className="rounded-full px-5">
-            <Link href="/properties/new">Create purchase</Link>
+            <Link href="/properties/new">Start a purchase</Link>
           </Button>
         </CardContent>
       </Card>
