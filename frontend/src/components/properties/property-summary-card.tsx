@@ -33,12 +33,12 @@ function deriveStatus(property: Property): Property["status"] {
     return "settled";
   }
 
-  if (property.conditions.some((condition) => condition.status === "pending")) {
-    return "conditional";
+  if (property.status === "cancelled") {
+    return "cancelled";
   }
 
-  if (property.daysUntilSettlement < 7) {
-    return "pre_settlement";
+  if (property.conditions.some((condition) => condition.status === "pending" || condition.status === "failed" || condition.status === "expired")) {
+    return "conditional";
   }
 
   return "unconditional";
@@ -84,8 +84,8 @@ export function PropertySummaryCard({ property }: { property: Property }) {
     mutationFn: async (condition: Condition) => completeCondition(condition.id, await getToken()),
     onSuccess: (_data, condition) => {
       toast({
-        title: "Condition completed",
-        description: `Marked \"${condition.type}\" as complete.`,
+        title: "Condition satisfied",
+        description: `Marked "${condition.type}" as satisfied.`,
         variant: "success"
       });
       router.refresh();
@@ -93,7 +93,7 @@ export function PropertySummaryCard({ property }: { property: Property }) {
     onError: (_error, condition) => {
       toast({
         title: "Couldn't update condition",
-        description: `Couldn't mark \"${condition.type}\" as complete.`,
+        description: `Couldn't mark "${condition.type}" as satisfied.`,
         variant: "danger"
       });
       router.refresh();
@@ -156,14 +156,14 @@ export function PropertySummaryCard({ property }: { property: Property }) {
   };
 
   const markConditionComplete = (condition: Condition) => {
-    if (condition.status === "completed") {
+    if (condition.status === "satisfied" || condition.status === "waived") {
       return;
     }
 
     setLocalProperty((prev) => {
       const nextConditions = prev.conditions.map((item) =>
         item.id === condition.id
-          ? { ...item, status: "completed" as const, completedAtUtc: new Date().toISOString() }
+          ? { ...item, status: "satisfied" as const, completedAtUtc: new Date().toISOString() }
           : item
       );
 
@@ -229,7 +229,7 @@ export function PropertySummaryCard({ property }: { property: Property }) {
               completed={localProperty.taskSummary.completed}
               total={localProperty.taskSummary.total}
               pending={localProperty.taskSummary.pending}
-              openConditions={localProperty.conditions.filter((condition) => condition.status !== "completed").length}
+              openConditions={localProperty.conditions.filter((condition) => condition.status !== "satisfied" && condition.status !== "waived").length}
             />
           </div>
         </TabsContent>

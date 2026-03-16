@@ -35,7 +35,7 @@ public sealed class ConditionConfiguration : IEntityTypeConfiguration<Condition>
             .HasColumnName("status")
             .HasConversion(
                 value => value.ToString().ToLowerInvariant(),
-                value => Enum.Parse<ConditionStatus>(value, ignoreCase: true))
+                value => ParseConditionStatus(value))
             .HasMaxLength(32)
             .IsRequired();
 
@@ -47,5 +47,18 @@ public sealed class ConditionConfiguration : IEntityTypeConfiguration<Condition>
             .IsRequired();
 
         builder.HasIndex(condition => condition.PropertyId);
+    }
+
+    private static ConditionStatus ParseConditionStatus(string value)
+    {
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "completed" => ConditionStatus.Satisfied,
+            "satisfied" => ConditionStatus.Satisfied,
+            "waived" => ConditionStatus.Waived,
+            "failed" => ConditionStatus.Failed,
+            "expired" => ConditionStatus.Expired,
+            _ => ConditionStatus.Pending
+        };
     }
 }

@@ -1,10 +1,13 @@
+using KeyPilot.Application.Abstractions.Clock;
 using KeyPilot.Application.Abstractions.Persistence;
 using KeyPilot.Application.Properties.GetPropertyById;
 using MediatR;
 
 namespace KeyPilot.Application.Properties.SettleProperty;
 
-public sealed class SettlePropertyHandler(IApplicationDbContext dbContext)
+public sealed class SettlePropertyHandler(
+    IApplicationDbContext dbContext,
+    IDateTimeProvider dateTimeProvider)
     : IRequestHandler<SettlePropertyCommand, PropertyDto?>
 {
     public async Task<PropertyDto?> Handle(SettlePropertyCommand request, CancellationToken cancellationToken)
@@ -16,7 +19,7 @@ public sealed class SettlePropertyHandler(IApplicationDbContext dbContext)
             return null;
         }
 
-        property.MarkSettlementComplete();
+        property.MarkSettlementComplete(dateTimeProvider.UtcNow);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return PropertyDto.FromProperty(property);

@@ -3,6 +3,8 @@ namespace KeyPilot.Domain.Properties;
 public enum ConditionStatus
 {
     Pending = 0,
-    Completed = 1,
-    Expired = 2
+    Satisfied = 1,
+    Waived = 2,
+    Failed = 3,
+    Expired = 4
 }

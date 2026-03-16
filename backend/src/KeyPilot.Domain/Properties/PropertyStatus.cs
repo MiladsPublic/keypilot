@@ -6,5 +6,6 @@ public enum PropertyStatus
     Conditional = 1,
     Unconditional = 2,
     PreSettlement = 3,
-    Settled = 4
+    Settled = 4,
+    Cancelled = 5
 }

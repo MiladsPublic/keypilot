@@ -44,6 +44,15 @@ public sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
             .HasColumnName("settlement_date")
             .IsRequired();
 
+        builder.Property(property => property.UnconditionalDate)
+            .HasColumnName("unconditional_date");
+
+        builder.Property(property => property.SettledDate)
+            .HasColumnName("settled_date");
+
+        builder.Property(property => property.CancelledDate)
+            .HasColumnName("cancelled_date");
+
         builder.Property(property => property.PurchasePrice)
             .HasColumnName("purchase_price")
             .HasColumnType("numeric(12,2)");

@@ -24,7 +24,7 @@ public sealed class CompleteTaskHandler(
 
         if (property is not null)
         {
-            property.RecalculateStatus();
+            property.RecalculateStatus(DateOnly.FromDateTime(dateTimeProvider.UtcNow));
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);

@@ -2,7 +2,7 @@ export interface Condition {
   id: string;
   type: "finance" | "building_report" | "lim" | "insurance" | "solicitor_approval";
   dueDate: string;
-  status: "pending" | "completed" | "expired";
+  status: "pending" | "satisfied" | "waived" | "failed" | "expired";
   completedAtUtc: string | null;
 }
 
@@ -26,9 +26,12 @@ export interface Property {
   id: string;
   workspaceId: string | null;
   address: string;
-  status: "accepted_offer" | "conditional" | "unconditional" | "pre_settlement" | "settled";
+  status: "accepted_offer" | "conditional" | "unconditional" | "pre_settlement" | "settled" | "cancelled";
   acceptedOfferDate: string;
+  unconditionalDate: string | null;
   settlementDate: string;
+  settledDate: string | null;
+  cancelledDate: string | null;
   daysUntilSettlement: number;
   purchasePrice: number | null;
   depositAmount: number | null;

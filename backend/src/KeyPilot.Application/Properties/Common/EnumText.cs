@@ -13,6 +13,7 @@ internal static class EnumText
             Domain.Properties.PropertyStatus.Unconditional => "unconditional",
             Domain.Properties.PropertyStatus.PreSettlement => "pre_settlement",
             Domain.Properties.PropertyStatus.Settled => "settled",
+            Domain.Properties.PropertyStatus.Cancelled => "cancelled",
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
     }
@@ -35,7 +36,9 @@ internal static class EnumText
         return status switch
         {
             Domain.Properties.ConditionStatus.Pending => "pending",
-            Domain.Properties.ConditionStatus.Completed => "completed",
+            Domain.Properties.ConditionStatus.Satisfied => "satisfied",
+            Domain.Properties.ConditionStatus.Waived => "waived",
+            Domain.Properties.ConditionStatus.Failed => "failed",
             Domain.Properties.ConditionStatus.Expired => "expired",
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };

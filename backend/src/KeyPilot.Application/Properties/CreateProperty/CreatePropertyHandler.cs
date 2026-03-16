@@ -68,7 +68,7 @@ public sealed class CreatePropertyHandler(
             property.AddTask(title, TaskStage.Settlement, request.SettlementDate, conditionId: null, createdAtUtc);
         }
 
-        property.RecalculateStatus();
+        property.RecalculateStatus(DateOnly.FromDateTime(createdAtUtc));
 
         await dbContext.AddPropertyAsync(property, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);

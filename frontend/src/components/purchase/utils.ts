@@ -5,7 +5,8 @@ export const timelineStages = [
   "conditional",
   "unconditional",
   "pre_settlement",
-  "settled"
+  "settled",
+  "cancelled"
 ] as const;
 
 export function formatStage(value: string) {
@@ -96,11 +97,11 @@ export function countdownTone(daysUntilSettlement: number): "normal" | "warning"
 export function badgeVariantForStatus(
   status: string
 ): "default" | "secondary" | "warning" | "success" | "danger" {
-  if (status === "settled" || status === "completed") {
+  if (status === "settled" || status === "completed" || status === "satisfied" || status === "waived") {
     return "success";
   }
 
-  if (status === "expired") {
+  if (status === "expired" || status === "failed" || status === "cancelled") {
     return "danger";
   }
 

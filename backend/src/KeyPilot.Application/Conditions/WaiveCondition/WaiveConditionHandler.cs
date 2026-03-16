@@ -3,13 +3,13 @@ using KeyPilot.Application.Abstractions.Persistence;
 using KeyPilot.Application.Properties.Common;
 using MediatR;
 
-namespace KeyPilot.Application.Conditions.CompleteCondition;
+namespace KeyPilot.Application.Conditions.WaiveCondition;
 
-public sealed class CompleteConditionHandler(
+public sealed class WaiveConditionHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : IRequestHandler<CompleteConditionCommand, ConditionDto?>
+    IDateTimeProvider dateTimeProvider) : IRequestHandler<WaiveConditionCommand, ConditionDto?>
 {
-    public async Task<ConditionDto?> Handle(CompleteConditionCommand request, CancellationToken cancellationToken)
+    public async Task<ConditionDto?> Handle(WaiveConditionCommand request, CancellationToken cancellationToken)
     {
         var condition = await dbContext.GetConditionByIdAsync(request.Id, request.OwnerUserId, cancellationToken);
 
@@ -26,7 +26,7 @@ public sealed class CompleteConditionHandler(
         }
 
         var now = dateTimeProvider.UtcNow;
-        condition.MarkSatisfied(now);
+        condition.MarkWaived(now);
         property.RecalculateStatus(DateOnly.FromDateTime(now));
 
         await dbContext.SaveChangesAsync(cancellationToken);

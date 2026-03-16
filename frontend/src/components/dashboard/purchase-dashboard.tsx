@@ -44,12 +44,12 @@ function deriveStatus(property: Property): Property["status"] {
     return "settled";
   }
 
-  if (property.conditions.some((condition) => condition.status === "pending")) {
-    return "conditional";
+  if (property.status === "cancelled") {
+    return "cancelled";
   }
 
-  if (property.daysUntilSettlement < 7) {
-    return "pre_settlement";
+  if (property.conditions.some((condition) => condition.status === "pending" || condition.status === "failed" || condition.status === "expired")) {
+    return "conditional";
   }
 
   return "unconditional";
@@ -112,8 +112,8 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
     mutationFn: async (condition: Condition) => completeCondition(condition.id, await getToken()),
     onSuccess: (_data, condition) => {
       toast({
-        title: "Condition completed",
-        description: `Marked \"${condition.type}\" as complete.`,
+        title: "Condition satisfied",
+        description: `Marked "${condition.type}" as satisfied.`,
         variant: "success"
       });
       router.refresh();
@@ -121,7 +121,7 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
     onError: (_error, condition) => {
       toast({
         title: "Couldn't update condition",
-        description: `Couldn't mark \"${condition.type}\" as complete.`,
+        description: `Couldn't mark "${condition.type}" as satisfied.`,
         variant: "danger"
       });
       router.refresh();
@@ -193,7 +193,7 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
   };
 
   const markConditionComplete = (condition: Condition) => {
-    if (condition.status === "completed") {
+    if (condition.status === "satisfied" || condition.status === "waived") {
       return;
     }
 
@@ -205,7 +205,7 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
 
         const nextConditions = property.conditions.map((item) =>
           item.id === condition.id
-            ? { ...item, status: "completed" as const, completedAtUtc: new Date().toISOString() }
+            ? { ...item, status: "satisfied" as const, completedAtUtc: new Date().toISOString() }
             : item
         );
 
@@ -272,7 +272,7 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
             completed={selectedProperty.taskSummary.completed}
             total={selectedProperty.taskSummary.total}
             pending={selectedProperty.taskSummary.pending}
-            openConditions={selectedProperty.conditions.filter((condition) => condition.status !== "completed").length}
+            openConditions={selectedProperty.conditions.filter((condition) => condition.status !== "satisfied" && condition.status !== "waived").length}
           />
         </div>
 

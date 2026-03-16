@@ -9,7 +9,7 @@ export function StageTimeline({ currentStatus }: { currentStatus: Property["stat
   const currentStageIndex = timelineStages.indexOf(currentStatus);
 
   return (
-    <div className="grid gap-3 md:grid-cols-5">
+    <div className="grid gap-3 md:grid-cols-6">
       {timelineStages.map((stage, index) => {
         const isComplete = index < currentStageIndex;
         const isCurrent = index === currentStageIndex;

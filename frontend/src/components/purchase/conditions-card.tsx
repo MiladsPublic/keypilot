@@ -6,6 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type Condition } from "@/features/properties/types/property";
 import { badgeVariantForStatus, formatDate } from "@/components/purchase/utils";
 
+function isClosedCondition(status: Condition["status"]) {
+  return status === "satisfied" || status === "waived";
+}
+
 export function ConditionsCard({
   conditions,
   disabled,
@@ -37,7 +41,7 @@ export function ConditionsCard({
                 size="sm"
                 variant="outline"
                 className="rounded-lg"
-                disabled={condition.status === "completed" || disabled}
+                disabled={isClosedCondition(condition.status) || disabled}
                 onClick={() => onCompleteCondition(condition)}
               >
                 Complete

@@ -28,7 +28,7 @@ public sealed class Property : AuditableEntity
         DepositAmount = depositAmount;
         OwnerUserId = ownerUserId;
         WorkspaceId = workspaceId;
-        Status = PropertyStatus.AcceptedOffer;
+        Status = PropertyStatus.Conditional;
         CreatedAtUtc = createdAtUtc;
     }
 
@@ -47,6 +47,12 @@ public sealed class Property : AuditableEntity
     public decimal? PurchasePrice { get; private set; }
 
     public decimal? DepositAmount { get; private set; }
+
+    public DateOnly? UnconditionalDate { get; private set; }
+
+    public DateOnly? SettledDate { get; private set; }
+
+    public DateOnly? CancelledDate { get; private set; }
 
     public IReadOnlyCollection<Condition> Conditions => _conditions;
 
@@ -92,30 +98,61 @@ public sealed class Property : AuditableEntity
         return task;
     }
 
-    public void MarkSettlementComplete()
+    public void MarkSettlementComplete(DateTime settledAtUtc)
     {
-        Status = PropertyStatus.Settled;
+        SettledDate = DateOnly.FromDateTime(settledAtUtc);
+        RecalculateStatus(DateOnly.FromDateTime(settledAtUtc));
     }
 
-    public void RecalculateStatus()
+    public void MarkCancelled(DateTime cancelledAtUtc)
     {
-        if (Status == PropertyStatus.Settled)
+        CancelledDate = DateOnly.FromDateTime(cancelledAtUtc);
+        Status = PropertyStatus.Cancelled;
+    }
+
+    public void RecalculateStatus(DateOnly today)
+    {
+        if (CancelledDate.HasValue)
         {
+            Status = PropertyStatus.Cancelled;
             return;
         }
 
-        var hasPendingConditions = _conditions.Any(condition => condition.Status == ConditionStatus.Pending);
+        if (SettledDate.HasValue)
+        {
+            Status = PropertyStatus.Settled;
+            return;
+        }
 
-        if (hasPendingConditions)
+        foreach (var condition in _conditions)
+        {
+            condition.MarkExpiredIfOverdue(today);
+        }
+
+        var hasBlockingConditions = _conditions.Any(condition => condition.IsBlocking());
+
+        if (hasBlockingConditions)
         {
             Status = PropertyStatus.Conditional;
             return;
         }
 
-        var daysUntilSettlement = SettlementDate.DayNumber - DateOnly.FromDateTime(DateTime.UtcNow).DayNumber;
+        if (_conditions.Count == 0 || _conditions.All(condition => condition.IsClosed()))
+        {
+            if (!UnconditionalDate.HasValue)
+            {
+                UnconditionalDate = today;
+            }
 
-        Status = daysUntilSettlement < 7
-            ? PropertyStatus.PreSettlement
-            : PropertyStatus.Unconditional;
+            Status = PropertyStatus.Unconditional;
+            return;
+        }
+
+        Status = PropertyStatus.Conditional;
+    }
+
+    public void RecalculateStatus()
+    {
+        RecalculateStatus(DateOnly.FromDateTime(DateTime.UtcNow));
     }
 }
