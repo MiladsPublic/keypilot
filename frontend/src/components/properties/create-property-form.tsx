@@ -14,8 +14,18 @@ import {
   type CreatePropertyFormValues
 } from "@/features/properties/schemas/create-property-schema";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/hooks/use-toast";
+
+const conditionOptions = [
+  { key: "finance", label: "Finance" },
+  { key: "building_report", label: "Building report" },
+  { key: "lim", label: "LIM" },
+  { key: "insurance", label: "Insurance" },
+  { key: "solicitor_approval", label: "Solicitor approval" }
+] as const;
 
 export function CreatePropertyForm() {
   const router = useRouter();
@@ -23,6 +33,8 @@ export function CreatePropertyForm() {
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors }
   } = useForm<CreatePropertyFormValues>({
     resolver: zodResolver(createPropertySchema),
@@ -47,9 +59,22 @@ export function CreatePropertyForm() {
       const token = await getToken();
       return createProperty(values, token);
     },
-    onSuccess: (property) => {
+    onSuccess: (property, values) => {
+      toast({
+        title: "Purchase created",
+        description: `${values.address.trim()} is ready.`,
+        variant: "success"
+      });
       startTransition(() => {
         router.push(`/properties/${property.id}`);
+      });
+    },
+    onError: (_error, values) => {
+      const addressLabel = values.address.trim() || "this purchase";
+      toast({
+        title: "Couldn't create purchase",
+        description: `Couldn't create ${addressLabel}. Check your details and try again.`,
+        variant: "danger"
       });
     }
   });
@@ -58,27 +83,53 @@ export function CreatePropertyForm() {
     await mutation.mutateAsync(values);
   });
 
+  const conditionsState = watch("conditions");
+
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="border-b border-line bg-canvas/80">
+    <Card>
+      <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="rounded-2xl bg-accent/10 p-3 text-accent">
+          <div className="rounded-xl bg-[var(--muted)] p-3 text-ink">
             <Home className="h-5 w-5" />
           </div>
           <div>
-            <CardTitle>New property workspace</CardTitle>
-            <CardDescription>Capture the purchase timeline first. Tasks and documents can build on top later.</CardDescription>
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-ink/65">Purchase setup</p>
+            <CardTitle>Create purchase workspace</CardTitle>
+            <CardDescription>Start with the accepted offer, settlement date, and active conditions.</CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent className="pt-6">
-        <form className="space-y-5" onSubmit={onSubmit}>
+        <form className="space-y-6" onSubmit={onSubmit}>
+          <section className="space-y-4">
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-ink/65">Property</p>
           <label className="block space-y-2">
             <span className="text-sm font-medium text-ink/80">Property address</span>
             <Input placeholder="12 Harbour View Road, Auckland" {...register("address")} />
             {errors.address ? <p className="text-sm text-red-700">{errors.address.message}</p> : null}
           </label>
 
+          <div className="grid gap-5 md:grid-cols-2">
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-ink/80">Purchase price (optional)</span>
+              <Input inputMode="decimal" placeholder="985000" {...register("purchasePrice")} />
+              {errors.purchasePrice ? (
+                <p className="text-sm text-red-700">{errors.purchasePrice.message}</p>
+              ) : null}
+            </label>
+
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-ink/80">Deposit amount (optional)</span>
+              <Input inputMode="decimal" placeholder="200000" {...register("depositAmount")} />
+              {errors.depositAmount ? (
+                <p className="text-sm text-red-700">{errors.depositAmount.message}</p>
+              ) : null}
+            </label>
+          </div>
+          </section>
+
+          <section className="space-y-4">
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-ink/65">Timeline</p>
           <div className="grid gap-5 md:grid-cols-2">
             <label className="block space-y-2">
               <span className="text-sm font-medium text-ink/80">Offer accepted date</span>
@@ -96,48 +147,29 @@ export function CreatePropertyForm() {
               ) : null}
             </label>
           </div>
+          </section>
 
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-ink/80">Purchase price (optional)</span>
-            <Input inputMode="decimal" placeholder="985000" {...register("purchasePrice")} />
-            {errors.purchasePrice ? (
-              <p className="text-sm text-red-700">{errors.purchasePrice.message}</p>
-            ) : null}
-          </label>
+          <section className="space-y-4">
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-ink/65">Conditions</p>
+            <div className="flex flex-wrap gap-2">
+              {conditionOptions.map((option) => {
+                const isSelected = conditionsState?.[option.key] ?? false;
 
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-ink/80">Deposit amount (optional)</span>
-            <Input inputMode="decimal" placeholder="200000" {...register("depositAmount")} />
-            {errors.depositAmount ? (
-              <p className="text-sm text-red-700">{errors.depositAmount.message}</p>
-            ) : null}
-          </label>
-
-          <fieldset className="space-y-3">
-            <legend className="text-sm font-medium text-ink/80">Conditions</legend>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="flex items-center gap-2 rounded-2xl border border-line bg-canvas px-3 py-2 text-sm">
-                <input type="checkbox" {...register("conditions.finance")} />
-                Finance
-              </label>
-              <label className="flex items-center gap-2 rounded-2xl border border-line bg-canvas px-3 py-2 text-sm">
-                <input type="checkbox" {...register("conditions.building_report")} />
-                Building report
-              </label>
-              <label className="flex items-center gap-2 rounded-2xl border border-line bg-canvas px-3 py-2 text-sm">
-                <input type="checkbox" {...register("conditions.lim")} />
-                LIM
-              </label>
-              <label className="flex items-center gap-2 rounded-2xl border border-line bg-canvas px-3 py-2 text-sm">
-                <input type="checkbox" {...register("conditions.insurance")} />
-                Insurance
-              </label>
-              <label className="flex items-center gap-2 rounded-2xl border border-line bg-canvas px-3 py-2 text-sm sm:col-span-2">
-                <input type="checkbox" {...register("conditions.solicitor_approval")} />
-                Solicitor approval
-              </label>
+                return (
+                  <Button
+                    key={option.key}
+                    type="button"
+                    variant={isSelected ? "secondary" : "outline"}
+                    className="rounded-full"
+                    onClick={() => setValue(`conditions.${option.key}`, !isSelected)}
+                  >
+                    {option.label}
+                    {isSelected ? <Badge variant="success">Selected</Badge> : null}
+                  </Button>
+                );
+              })}
             </div>
-          </fieldset>
+          </section>
 
           {mutation.isError ? (
             <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -145,10 +177,15 @@ export function CreatePropertyForm() {
             </p>
           ) : null}
 
-          <Button type="submit" disabled={mutation.isPending} className="w-full sm:w-auto">
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" disabled={mutation.isPending} className="rounded-full px-5">
             {mutation.isPending ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Create property
-          </Button>
+            Create purchase
+            </Button>
+            <Button type="button" variant="outline" className="rounded-lg" onClick={() => router.back()}>
+              Cancel
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

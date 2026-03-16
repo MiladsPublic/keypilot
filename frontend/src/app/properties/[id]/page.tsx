@@ -25,17 +25,14 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
     const property = await getProperty(id, token);
 
     return (
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-accent">Property overview</p>
-            <h1 className="font-[family-name:var(--font-display)] text-4xl">Workspace created</h1>
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-ink/65">Purchase workspace</p>
+            <h1 className="text-3xl font-semibold md:text-4xl">Purchase detail</h1>
           </div>
-          <Link
-            href="/properties/new"
-            className="inline-flex items-center justify-center rounded-full border border-line bg-white/80 px-4 py-3 text-sm font-semibold text-ink transition hover:bg-white"
-          >
-            Create another property
+          <Link href="/properties/new" className="inline-flex items-center justify-center rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white">
+            Create purchase
           </Link>
         </div>
         <PropertySummaryCard property={property} />

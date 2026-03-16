@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, BellRing, FileText, ListTodo } from "lucide-react";
+import { ArrowRight, BellRing, CheckCircle2, FileText, ListChecks } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const highlights = [
@@ -11,74 +12,102 @@ const highlights = [
   },
   {
     title: "Stay organised",
-    description: "Tasks, contacts, and documents can grow around the property workspace.",
-    icon: ListTodo
+    description: "Keep tasks, updates and key milestones in one clear timeline.",
+    icon: ListChecks
   },
   {
     title: "Reduce inbox chaos",
-    description: "Bring the buying journey out of scattered email threads and PDFs.",
+    description: "Bring documents and deadlines into one calm purchase workspace.",
     icon: FileText
   }
 ];
 
+const journey = ["Offer accepted", "Conditional", "Unconditional", "Pre-settlement", "Settled"];
+
 export default function HomePage() {
   return (
-    <div className="space-y-8">
-      <section className="grid gap-6 rounded-[2rem] border border-line bg-white/75 p-6 shadow-panel backdrop-blur-sm md:grid-cols-[1.4fr_1fr] md:p-10">
-        <div className="space-y-5">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-accent">Home buying workspace</p>
-          <h1 className="max-w-xl font-[family-name:var(--font-display)] text-4xl leading-tight md:text-6xl">
-            Guide each property from accepted offer to settlement.
-          </h1>
-          <p className="max-w-xl text-base leading-7 text-ink/72">
-            KeyPilot is the operational layer for the purchase journey: timeline, tasks, documents, and the people around the deal.
-          </p>
-          <Link
-            href="/properties/new"
-            className="mt-2 inline-flex w-fit items-center justify-center rounded-full bg-ink px-4 py-3 text-sm font-semibold text-white shadow-panel transition hover:-translate-y-0.5 hover:bg-[#15231d]"
-          >
-            Start a property
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </div>
-
-        <div className="rounded-[2rem] bg-ink p-6 text-white">
-          <p className="text-sm uppercase tracking-[0.22em] text-white/70">MVP focus</p>
-          <div className="mt-6 space-y-4">
-            <div>
-              <p className="text-3xl font-semibold">Property workspace</p>
-              <p className="mt-2 text-sm text-white/70">Start with the core record and build the rest around it.</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-3xl bg-white/10 p-4">Conditions</div>
-              <div className="rounded-3xl bg-white/10 p-4">Tasks</div>
-              <div className="rounded-3xl bg-white/10 p-4">Documents</div>
-              <div className="rounded-3xl bg-white/10 p-4">Contacts</div>
+    <div className="space-y-6">
+      <Card className="rounded-2xl">
+        <CardContent className="grid gap-6 p-5 md:grid-cols-[1.4fr_1fr] md:p-6">
+          <div className="space-y-4">
+            <h1 className="max-w-2xl text-5xl font-semibold leading-tight md:text-6xl">
+              Guide each home purchase from accepted offer to settlement.
+            </h1>
+            <p className="max-w-xl text-base leading-7 text-ink/70">
+              KeyPilot keeps the purchase timeline in one calm workspace - conditions, deadlines, tasks and documents.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild className="rounded-full px-5">
+                <Link href="/properties/new">
+                  Start a purchase
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="rounded-lg">
+                <Link href="/sign-in">Sign in</Link>
+              </Button>
             </div>
           </div>
-        </div>
-      </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+          <Card className="rounded-2xl border border-line bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg">Purchase at a glance</CardTitle>
+              <CardDescription>What stage are you in and what needs attention next.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="rounded-xl border border-line bg-[var(--muted)] p-3 text-sm">Current stage: Conditional</div>
+              <div className="rounded-xl border border-line bg-[var(--muted)] p-3 text-sm">Settlement in 12 days</div>
+              <div className="rounded-xl border border-line bg-[var(--muted)] p-3 text-sm">3 conditions still open</div>
+              <div className="rounded-xl border border-line bg-[var(--muted)] p-3 text-sm">4 / 12 tasks completed</div>
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
+
+      <section className="grid gap-6 md:grid-cols-3">
         {highlights.map((highlight) => {
           const Icon = highlight.icon;
 
           return (
-            <Card key={highlight.title}>
+            <Card key={highlight.title} className="rounded-2xl">
               <CardHeader>
-                <div className="mb-2 inline-flex w-fit rounded-2xl bg-accent/10 p-3 text-accent">
-                  <Icon className="h-5 w-5" />
+                <div className="mb-2 inline-flex w-fit rounded-full bg-[var(--muted)] p-2">
+                  <Icon className="h-4 w-4 text-accent" />
                 </div>
-                <CardTitle>{highlight.title}</CardTitle>
+                <CardTitle className="text-lg">{highlight.title}</CardTitle>
                 <CardDescription>{highlight.description}</CardDescription>
               </CardHeader>
-              <CardContent className="pt-0 text-sm text-ink/60">
-                The scaffold already includes the property creation flow and the backend contract it depends on.
-              </CardContent>
             </Card>
           );
         })}
       </section>
+
+      <Card className="rounded-2xl">
+        <CardHeader>
+          <CardTitle className="text-lg">Purchase journey</CardTitle>
+          <CardDescription>See the full path from accepted offer to settlement.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center gap-3">
+          {journey.map((step) => (
+            <div key={step} className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-2 text-sm">
+              <CheckCircle2 className="h-4 w-4 text-ink/55" />
+              {step}
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-2xl">
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-6">
+          <div>
+            <p className="text-lg font-semibold">Start your purchase workspace today</p>
+            <p className="text-sm text-ink/70">Keep the full purchase timeline visible from day one.</p>
+          </div>
+          <Button asChild className="rounded-full px-5">
+            <Link href="/properties/new">Create purchase</Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
