@@ -9,6 +9,7 @@ import { CalendarClock, FileText, Users } from "lucide-react";
 import { completeCondition } from "@/features/properties/api/complete-condition";
 import { completeTask } from "@/features/properties/api/complete-task";
 import { settleProperty } from "@/features/properties/api/settle-property";
+import { cancelProperty } from "@/features/properties/api/cancel-property";
 import { waiveCondition } from "@/features/properties/api/waive-condition";
 import { failCondition } from "@/features/properties/api/fail-condition";
 import { type Condition, type Property, type PropertyTask } from "@/features/properties/types/property";
@@ -44,6 +45,7 @@ export function PropertySummaryCard({ property }: { property: Property }) {
   const { getToken } = useAuth();
 
   const [settleDialogOpen, setSettleDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [localProperty, setLocalProperty] = useState(property);
 
   const taskMutation = useMutation({
@@ -120,6 +122,26 @@ export function PropertySummaryCard({ property }: { property: Property }) {
     }
   });
 
+  const cancelMutation = useMutation({
+    mutationFn: async (id: string) => cancelProperty(id, await getToken()),
+    onSuccess: () => {
+      toast({
+        title: "Purchase cancelled",
+        description: `${localProperty.address} is now marked as cancelled.`,
+        variant: "warning"
+      });
+      setCancelDialogOpen(false);
+      router.refresh();
+    },
+    onError: () => {
+      toast({
+        title: "Couldn't cancel purchase",
+        description: `Couldn't cancel ${localProperty.address}.`,
+        variant: "danger"
+      });
+    }
+  });
+
   const allTasks = useMemo(() => [...localProperty.tasks], [localProperty.tasks]);
   const taskGroups = groupedTasks(allTasks);
 
@@ -189,31 +211,59 @@ export function PropertySummaryCard({ property }: { property: Property }) {
       <StageTimeline currentStatus={localProperty.status} />
 
       <div className="flex justify-end">
-        <Dialog open={settleDialogOpen} onOpenChange={setSettleDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="rounded-full" disabled={localProperty.status === "settled"}>
-              Mark as settled
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Mark this purchase as settled?</DialogTitle>
-              <DialogDescription>This will set the purchase stage to settled.</DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" className="rounded-lg" onClick={() => setSettleDialogOpen(false)}>
-                Cancel
+        <div className="flex flex-wrap justify-end gap-2">
+          <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="rounded-full" variant="outline" disabled={localProperty.status === "settled" || localProperty.status === "cancelled"}>
+                Mark as cancelled
               </Button>
-              <Button
-                className="rounded-full"
-                disabled={settleMutation.isPending}
-                onClick={() => settleMutation.mutate(localProperty.id)}
-              >
-                Confirm
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Cancel this purchase?</DialogTitle>
+                <DialogDescription>This will set the purchase stage to cancelled.</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" className="rounded-lg" onClick={() => setCancelDialogOpen(false)}>
+                  Keep purchase
+                </Button>
+                <Button
+                  className="rounded-full"
+                  disabled={cancelMutation.isPending}
+                  onClick={() => cancelMutation.mutate(localProperty.id)}
+                >
+                  Confirm cancel
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={settleDialogOpen} onOpenChange={setSettleDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="rounded-full" disabled={localProperty.status === "settled" || localProperty.status === "cancelled"}>
+                Mark as settled
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Mark this purchase as settled?</DialogTitle>
+                <DialogDescription>This will set the purchase stage to settled.</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" className="rounded-lg" onClick={() => setSettleDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  className="rounded-full"
+                  disabled={settleMutation.isPending}
+                  onClick={() => settleMutation.mutate(localProperty.id)}
+                >
+                  Confirm
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Tabs defaultValue="overview">

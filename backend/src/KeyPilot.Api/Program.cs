@@ -32,6 +32,7 @@ var propertyGroup = app.MapGroup("/api/v1/properties").WithTags("Properties").Re
 CreatePropertyEndpoint.Map(propertyGroup);
 GetPropertyEndpoint.Map(propertyGroup);
 SettlePropertyEndpoint.Map(propertyGroup);
+CancelPropertyEndpoint.Map(propertyGroup);
 
 var taskGroup = app.MapGroup("/api/v1/tasks").WithTags("Tasks").RequireAuthorization();
 CompleteTaskEndpoint.Map(taskGroup);
