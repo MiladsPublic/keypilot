@@ -4,7 +4,6 @@ export const timelineStages = [
   "accepted_offer",
   "conditional",
   "unconditional",
-  "pre_settlement",
   "settled",
   "cancelled"
 ] as const;

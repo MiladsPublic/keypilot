@@ -9,6 +9,7 @@ import { completeCondition } from "@/features/properties/api/complete-condition"
 import { completeTask } from "@/features/properties/api/complete-task";
 import { waiveCondition } from "@/features/properties/api/waive-condition";
 import { failCondition } from "@/features/properties/api/fail-condition";
+import { cancelProperty } from "@/features/properties/api/cancel-property";
 import { type Condition, type Property, type PropertyTask } from "@/features/properties/types/property";
 import { ConditionsCard, type ConditionAction } from "@/components/purchase/conditions-card";
 import { NextActionsCard } from "@/components/purchase/next-actions-card";
@@ -17,6 +18,16 @@ import { PurchaseHeroCard } from "@/components/purchase/purchase-hero-card";
 import { SettlementCountdownCard } from "@/components/purchase/settlement-countdown-card";
 import { StageTimeline } from "@/components/purchase/stage-timeline";
 import { TaskList } from "@/components/purchase/task-list";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 
@@ -68,6 +79,7 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
   const [properties, setProperties] = useState(initialProperties);
   const [selectedPropertyId, setSelectedPropertyId] = useState(initialProperties[0]?.id ?? "");
   const [taskFilter, setTaskFilter] = useState<TaskFilter>("next");
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   const selectedProperty = useMemo(
     () => properties.find((property) => property.id === selectedPropertyId) ?? properties[0],
@@ -125,6 +137,29 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
         variant: "danger"
       });
       router.refresh();
+    }
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: async (id: string) => cancelProperty(id, await getToken()),
+    onSuccess: (updatedProperty) => {
+      setProperties((prev) =>
+        prev.map((property) => (property.id === updatedProperty.id ? updatedProperty : property))
+      );
+      toast({
+        title: "Purchase cancelled",
+        description: `${updatedProperty.address} is now marked as cancelled.`,
+        variant: "warning"
+      });
+      setCancelDialogOpen(false);
+      router.refresh();
+    },
+    onError: () => {
+      toast({
+        title: "Couldn't cancel purchase",
+        description: `Couldn't cancel ${selectedProperty.address}.`,
+        variant: "danger"
+      });
     }
   });
 
@@ -238,6 +273,38 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
       />
 
       <StageTimeline currentStatus={selectedProperty.status} />
+
+      <div className="flex justify-end">
+        <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+          <DialogTrigger asChild>
+            <Button
+              className="rounded-full"
+              variant="outline"
+              disabled={selectedProperty.status === "settled" || selectedProperty.status === "cancelled"}
+            >
+              Mark as cancelled
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Cancel this purchase?</DialogTitle>
+              <DialogDescription>This will set the purchase stage to cancelled.</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" className="rounded-lg" onClick={() => setCancelDialogOpen(false)}>
+                Keep purchase
+              </Button>
+              <Button
+                className="rounded-full"
+                disabled={cancelMutation.isPending}
+                onClick={() => cancelMutation.mutate(selectedProperty.id)}
+              >
+                Confirm cancel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="order-1 space-y-6 lg:col-span-2">

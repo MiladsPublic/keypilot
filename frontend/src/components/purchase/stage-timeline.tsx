@@ -6,10 +6,11 @@ import { timelineStages, formatStage } from "@/components/purchase/utils";
 import { type Property } from "@/features/properties/types/property";
 
 export function StageTimeline({ currentStatus }: { currentStatus: Property["status"] }) {
-  const currentStageIndex = timelineStages.indexOf(currentStatus);
+  const timelineStatus = currentStatus === "pre_settlement" ? "unconditional" : currentStatus;
+  const currentStageIndex = timelineStages.indexOf(timelineStatus);
 
   return (
-    <div className="grid gap-3 md:grid-cols-6">
+    <div className="grid gap-3 md:grid-cols-5">
       {timelineStages.map((stage, index) => {
         const isComplete = index < currentStageIndex;
         const isCurrent = index === currentStageIndex;
