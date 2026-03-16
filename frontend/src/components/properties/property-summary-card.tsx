@@ -28,22 +28,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 
-function deriveStatus(property: Property): Property["status"] {
-  if (property.status === "settled") {
-    return "settled";
-  }
-
-  if (property.status === "cancelled") {
-    return "cancelled";
-  }
-
-  if (property.conditions.some((condition) => condition.status === "pending" || condition.status === "failed" || condition.status === "expired")) {
-    return "conditional";
-  }
-
-  return "unconditional";
-}
-
 function groupedTasks(tasks: PropertyTask[]) {
   const groups = ["conditional", "unconditional", "pre_settlement", "settlement"] as const;
 
@@ -147,8 +131,7 @@ export function PropertySummaryCard({ property }: { property: Property }) {
           total: nextTasks.length,
           completed,
           pending: nextTasks.length - completed
-        },
-        status: deriveStatus({ ...prev, tasks: nextTasks })
+        }
       };
     });
 
@@ -169,8 +152,7 @@ export function PropertySummaryCard({ property }: { property: Property }) {
 
       return {
         ...prev,
-        conditions: nextConditions,
-        status: deriveStatus({ ...prev, conditions: nextConditions })
+        conditions: nextConditions
       };
     });
 

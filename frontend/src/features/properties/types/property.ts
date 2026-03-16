@@ -22,6 +22,18 @@ export interface TaskSummary {
   pending: number;
 }
 
+export interface PurchaseReadinessSummary {
+  mode: "conditional" | "settlement";
+  blockingConditions: number;
+  openConditions: number;
+  overdueConditions: number;
+  pendingTasks: number;
+  overdueTasks: number;
+  settlementTasksRemaining: number;
+  isReadyToSettle: boolean;
+  nextAction: string | null;
+}
+
 export interface Property {
   id: string;
   workspaceId: string | null;
@@ -38,5 +50,6 @@ export interface Property {
   conditions: Condition[];
   tasks: PropertyTask[];
   taskSummary: TaskSummary;
+  readinessSummary: PurchaseReadinessSummary;
   createdAtUtc: string;
 }

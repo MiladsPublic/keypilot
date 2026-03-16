@@ -39,22 +39,6 @@ function sortTasks(tasks: PropertyTask[]) {
   });
 }
 
-function deriveStatus(property: Property): Property["status"] {
-  if (property.status === "settled") {
-    return "settled";
-  }
-
-  if (property.status === "cancelled") {
-    return "cancelled";
-  }
-
-  if (property.conditions.some((condition) => condition.status === "pending" || condition.status === "failed" || condition.status === "expired")) {
-    return "conditional";
-  }
-
-  return "unconditional";
-}
-
 function updateTaskSummary(tasks: PropertyTask[]) {
   const total = tasks.length;
   const completed = tasks.filter((task) => task.status === "completed").length;
@@ -182,10 +166,7 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
           taskSummary: updateTaskSummary(nextTasksState)
         };
 
-        return {
-          ...nextProperty,
-          status: deriveStatus(nextProperty)
-        };
+        return nextProperty;
       })
     );
 
@@ -214,10 +195,7 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
           conditions: nextConditions
         };
 
-        return {
-          ...nextProperty,
-          status: deriveStatus(nextProperty)
-        };
+        return nextProperty;
       })
     );
 

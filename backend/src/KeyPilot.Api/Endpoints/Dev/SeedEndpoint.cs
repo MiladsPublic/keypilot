@@ -70,7 +70,7 @@ public static class SeedEndpoint
         await dbContext.AddPropertyAsync(property, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var response = CreatePropertyResponse.FromProperty(property);
+        var response = CreatePropertyResponse.FromProperty(property, today);
         return TypedResults.Created($"/api/v1/properties/{response.Id}", response);
     }
 }

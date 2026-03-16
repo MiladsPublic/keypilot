@@ -37,6 +37,7 @@ var taskGroup = app.MapGroup("/api/v1/tasks").WithTags("Tasks").RequireAuthoriza
 CompleteTaskEndpoint.Map(taskGroup);
 
 var conditionGroup = app.MapGroup("/api/v1/conditions").WithTags("Conditions").RequireAuthorization();
+SatisfyConditionEndpoint.Map(conditionGroup);
 CompleteConditionEndpoint.Map(conditionGroup);
 WaiveConditionEndpoint.Map(conditionGroup);
 FailConditionEndpoint.Map(conditionGroup);

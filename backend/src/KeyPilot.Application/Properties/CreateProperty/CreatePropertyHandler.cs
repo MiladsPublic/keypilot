@@ -73,7 +73,7 @@ public sealed class CreatePropertyHandler(
         await dbContext.AddPropertyAsync(property, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return CreatePropertyResponse.FromProperty(property);
+        return CreatePropertyResponse.FromProperty(property, DateOnly.FromDateTime(createdAtUtc));
     }
 
     private static ConditionType ParseConditionType(string value)

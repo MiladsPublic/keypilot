@@ -7,13 +7,13 @@ using System.Security.Claims;
 
 namespace KeyPilot.Api.Endpoints.Conditions;
 
-public static class CompleteConditionEndpoint
+public static class SatisfyConditionEndpoint
 {
     public static void Map(RouteGroupBuilder group)
     {
-        group.MapPatch("/{id:guid}/complete", HandleAsync)
-            .WithName("CompleteCondition")
-            .WithSummary("Legacy alias: mark a condition satisfied.")
+        group.MapPatch("/{id:guid}/satisfy", HandleAsync)
+            .WithName("SatisfyCondition")
+            .WithSummary("Mark a condition satisfied.")
             .Produces<ConditionDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status404NotFound);

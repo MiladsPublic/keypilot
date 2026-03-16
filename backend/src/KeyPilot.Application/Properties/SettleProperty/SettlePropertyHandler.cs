@@ -19,9 +19,10 @@ public sealed class SettlePropertyHandler(
             return null;
         }
 
-        property.MarkSettlementComplete(dateTimeProvider.UtcNow);
+        var now = dateTimeProvider.UtcNow;
+        property.MarkSettlementComplete(now);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return PropertyDto.FromProperty(property);
+        return PropertyDto.FromProperty(property, DateOnly.FromDateTime(now));
     }
 }

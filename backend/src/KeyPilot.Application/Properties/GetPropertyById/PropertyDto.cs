@@ -19,9 +19,10 @@ public sealed record PropertyDto(
     IReadOnlyCollection<ConditionDto> Conditions,
     IReadOnlyCollection<TaskDto> Tasks,
     TaskSummaryDto TaskSummary,
+    PurchaseReadinessDto ReadinessSummary,
     DateTime CreatedAtUtc)
 {
-    public static PropertyDto FromProperty(Property property)
+    public static PropertyDto FromProperty(Property property, DateOnly today)
     {
         return new PropertyDto(
             property.Id,
@@ -33,7 +34,7 @@ public sealed record PropertyDto(
             property.SettlementDate,
             property.SettledDate,
             property.CancelledDate,
-            PropertyMvpDtoMapper.DaysUntilSettlement(property),
+            PropertyMvpDtoMapper.DaysUntilSettlement(property, today),
             property.PurchasePrice,
             property.DepositAmount,
             property.Conditions
@@ -47,6 +48,7 @@ public sealed record PropertyDto(
                 .Select(TaskDto.FromTask)
                 .ToArray(),
             PropertyMvpDtoMapper.TaskSummary(property),
+            PropertyMvpDtoMapper.ReadinessSummary(property, today),
             property.CreatedAtUtc);
     }
 }

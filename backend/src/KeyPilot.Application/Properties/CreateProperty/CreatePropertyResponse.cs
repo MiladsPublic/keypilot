@@ -19,9 +19,10 @@ public sealed record CreatePropertyResponse(
     IReadOnlyCollection<ConditionDto> Conditions,
     IReadOnlyCollection<TaskDto> Tasks,
     TaskSummaryDto TaskSummary,
+    PurchaseReadinessDto ReadinessSummary,
     DateTime CreatedAtUtc)
 {
-    public static CreatePropertyResponse FromProperty(Property property)
+    public static CreatePropertyResponse FromProperty(Property property, DateOnly today)
     {
         return new CreatePropertyResponse(
             property.Id,
@@ -33,7 +34,7 @@ public sealed record CreatePropertyResponse(
             property.SettlementDate,
             property.SettledDate,
             property.CancelledDate,
-            PropertyMvpDtoMapper.DaysUntilSettlement(property),
+            PropertyMvpDtoMapper.DaysUntilSettlement(property, today),
             property.PurchasePrice,
             property.DepositAmount,
             property.Conditions
@@ -47,6 +48,7 @@ public sealed record CreatePropertyResponse(
                 .Select(TaskDto.FromTask)
                 .ToArray(),
             PropertyMvpDtoMapper.TaskSummary(property),
+            PropertyMvpDtoMapper.ReadinessSummary(property, today),
             property.CreatedAtUtc);
     }
 }
