@@ -9,8 +9,10 @@ import { CalendarClock, FileText, Users } from "lucide-react";
 import { completeCondition } from "@/features/properties/api/complete-condition";
 import { completeTask } from "@/features/properties/api/complete-task";
 import { settleProperty } from "@/features/properties/api/settle-property";
+import { waiveCondition } from "@/features/properties/api/waive-condition";
+import { failCondition } from "@/features/properties/api/fail-condition";
 import { type Condition, type Property, type PropertyTask } from "@/features/properties/types/property";
-import { ConditionsCard } from "@/components/purchase/conditions-card";
+import { ConditionsCard, type ConditionAction } from "@/components/purchase/conditions-card";
 import { ProgressCard } from "@/components/purchase/progress-card";
 import { PurchaseHeroCard } from "@/components/purchase/purchase-hero-card";
 import { StageTimeline } from "@/components/purchase/stage-timeline";
@@ -65,19 +67,33 @@ export function PropertySummaryCard({ property }: { property: Property }) {
   });
 
   const conditionMutation = useMutation({
-    mutationFn: async (condition: Condition) => completeCondition(condition.id, await getToken()),
-    onSuccess: (_data, condition) => {
+    mutationFn: async ({ condition, action }: { condition: Condition; action: ConditionAction }) => {
+      const token = await getToken();
+
+      if (action === "waive") {
+        return waiveCondition(condition.id, token);
+      }
+
+      if (action === "fail") {
+        return failCondition(condition.id, token);
+      }
+
+      return completeCondition(condition.id, token);
+    },
+    onSuccess: (_data, { condition, action }) => {
+      const actionLabel = action === "waive" ? "waived" : action === "fail" ? "failed" : "satisfied";
       toast({
-        title: "Condition satisfied",
-        description: `Marked "${condition.type}" as satisfied.`,
+        title: `Condition ${actionLabel}`,
+        description: `Marked "${condition.type}" as ${actionLabel}.`,
         variant: "success"
       });
       router.refresh();
     },
-    onError: (_error, condition) => {
+    onError: (_error, { condition, action }) => {
+      const actionLabel = action === "waive" ? "waived" : action === "fail" ? "failed" : "satisfied";
       toast({
         title: "Couldn't update condition",
-        description: `Couldn't mark "${condition.type}" as satisfied.`,
+        description: `Couldn't mark "${condition.type}" as ${actionLabel}.`,
         variant: "danger"
       });
       router.refresh();
@@ -138,15 +154,22 @@ export function PropertySummaryCard({ property }: { property: Property }) {
     taskMutation.mutate(task);
   };
 
-  const markConditionComplete = (condition: Condition) => {
-    if (condition.status === "satisfied" || condition.status === "waived") {
+  const handleConditionAction = (condition: Condition, action: ConditionAction) => {
+    if ((condition.status === "satisfied" || condition.status === "waived") && action !== "fail") {
       return;
     }
+
+    const nextStatus: Condition["status"] =
+      action === "waive" ? "waived" : action === "fail" ? "failed" : "satisfied";
 
     setLocalProperty((prev) => {
       const nextConditions = prev.conditions.map((item) =>
         item.id === condition.id
-          ? { ...item, status: "satisfied" as const, completedAtUtc: new Date().toISOString() }
+          ? {
+              ...item,
+              status: nextStatus,
+              completedAtUtc: action === "fail" ? null : new Date().toISOString()
+            }
           : item
       );
 
@@ -156,7 +179,7 @@ export function PropertySummaryCard({ property }: { property: Property }) {
       };
     });
 
-    conditionMutation.mutate(condition);
+    conditionMutation.mutate({ condition, action });
   };
 
   return (
@@ -225,7 +248,7 @@ export function PropertySummaryCard({ property }: { property: Property }) {
           <ConditionsCard
             conditions={localProperty.conditions}
             disabled={conditionMutation.isPending}
-            onCompleteCondition={markConditionComplete}
+            onConditionAction={handleConditionAction}
           />
         </TabsContent>
 

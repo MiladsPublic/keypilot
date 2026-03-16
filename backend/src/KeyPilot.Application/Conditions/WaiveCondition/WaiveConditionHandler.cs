@@ -1,13 +1,15 @@
 using KeyPilot.Application.Abstractions.Clock;
 using KeyPilot.Application.Abstractions.Persistence;
 using KeyPilot.Application.Properties.Common;
+using KeyPilot.Application.Properties.TaskGeneration;
 using MediatR;
 
 namespace KeyPilot.Application.Conditions.WaiveCondition;
 
 public sealed class WaiveConditionHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : IRequestHandler<WaiveConditionCommand, ConditionDto?>
+    IDateTimeProvider dateTimeProvider,
+    ISettlementChecklistGenerator settlementChecklistGenerator) : IRequestHandler<WaiveConditionCommand, ConditionDto?>
 {
     public async Task<ConditionDto?> Handle(WaiveConditionCommand request, CancellationToken cancellationToken)
     {
@@ -28,6 +30,7 @@ public sealed class WaiveConditionHandler(
         var now = dateTimeProvider.UtcNow;
         condition.MarkWaived(now);
         property.RecalculateStatus(DateOnly.FromDateTime(now));
+        settlementChecklistGenerator.EnsureGenerated(property, now);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

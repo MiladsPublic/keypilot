@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type Condition } from "@/features/properties/types/property";
 import { badgeVariantForStatus, formatDate } from "@/components/purchase/utils";
 
+export type ConditionAction = "satisfy" | "waive" | "fail";
+
 function isClosedCondition(status: Condition["status"]) {
   return status === "satisfied" || status === "waived";
 }
@@ -13,11 +15,11 @@ function isClosedCondition(status: Condition["status"]) {
 export function ConditionsCard({
   conditions,
   disabled,
-  onCompleteCondition
+  onConditionAction
 }: {
   conditions: Condition[];
   disabled?: boolean;
-  onCompleteCondition: (condition: Condition) => void;
+  onConditionAction: (condition: Condition, action: ConditionAction) => void;
 }) {
   return (
     <Card className="rounded-2xl">
@@ -42,9 +44,27 @@ export function ConditionsCard({
                 variant="outline"
                 className="rounded-lg"
                 disabled={isClosedCondition(condition.status) || disabled}
-                onClick={() => onCompleteCondition(condition)}
+                onClick={() => onConditionAction(condition, "satisfy")}
               >
-                Complete
+                Satisfy
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-lg"
+                disabled={isClosedCondition(condition.status) || disabled}
+                onClick={() => onConditionAction(condition, "waive")}
+              >
+                Waive
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-lg"
+                disabled={condition.status === "failed" || isClosedCondition(condition.status) || disabled}
+                onClick={() => onConditionAction(condition, "fail")}
+              >
+                Fail
               </Button>
             </div>
           </div>

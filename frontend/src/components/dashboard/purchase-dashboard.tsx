@@ -7,8 +7,10 @@ import { useMutation } from "@tanstack/react-query";
 
 import { completeCondition } from "@/features/properties/api/complete-condition";
 import { completeTask } from "@/features/properties/api/complete-task";
+import { waiveCondition } from "@/features/properties/api/waive-condition";
+import { failCondition } from "@/features/properties/api/fail-condition";
 import { type Condition, type Property, type PropertyTask } from "@/features/properties/types/property";
-import { ConditionsCard } from "@/components/purchase/conditions-card";
+import { ConditionsCard, type ConditionAction } from "@/components/purchase/conditions-card";
 import { NextActionsCard } from "@/components/purchase/next-actions-card";
 import { ProgressCard } from "@/components/purchase/progress-card";
 import { PurchaseHeroCard } from "@/components/purchase/purchase-hero-card";
@@ -93,19 +95,33 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
   });
 
   const completeConditionMutation = useMutation({
-    mutationFn: async (condition: Condition) => completeCondition(condition.id, await getToken()),
-    onSuccess: (_data, condition) => {
+    mutationFn: async ({ condition, action }: { condition: Condition; action: ConditionAction }) => {
+      const token = await getToken();
+
+      if (action === "waive") {
+        return waiveCondition(condition.id, token);
+      }
+
+      if (action === "fail") {
+        return failCondition(condition.id, token);
+      }
+
+      return completeCondition(condition.id, token);
+    },
+    onSuccess: (_data, { condition, action }) => {
+      const actionLabel = action === "waive" ? "waived" : action === "fail" ? "failed" : "satisfied";
       toast({
-        title: "Condition satisfied",
-        description: `Marked "${condition.type}" as satisfied.`,
+        title: `Condition ${actionLabel}`,
+        description: `Marked "${condition.type}" as ${actionLabel}.`,
         variant: "success"
       });
       router.refresh();
     },
-    onError: (_error, condition) => {
+    onError: (_error, { condition, action }) => {
+      const actionLabel = action === "waive" ? "waived" : action === "fail" ? "failed" : "satisfied";
       toast({
         title: "Couldn't update condition",
-        description: `Couldn't mark "${condition.type}" as satisfied.`,
+        description: `Couldn't mark "${condition.type}" as ${actionLabel}.`,
         variant: "danger"
       });
       router.refresh();
@@ -173,10 +189,13 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
     completeTaskMutation.mutate(task);
   };
 
-  const markConditionComplete = (condition: Condition) => {
-    if (condition.status === "satisfied" || condition.status === "waived") {
+  const handleConditionAction = (condition: Condition, action: ConditionAction) => {
+    if ((condition.status === "satisfied" || condition.status === "waived") && action !== "fail") {
       return;
     }
+
+    const nextStatus: Condition["status"] =
+      action === "waive" ? "waived" : action === "fail" ? "failed" : "satisfied";
 
     setProperties((prev) =>
       prev.map((property) => {
@@ -186,7 +205,11 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
 
         const nextConditions = property.conditions.map((item) =>
           item.id === condition.id
-            ? { ...item, status: "satisfied" as const, completedAtUtc: new Date().toISOString() }
+            ? {
+                ...item,
+                status: nextStatus,
+                completedAtUtc: action === "fail" ? null : new Date().toISOString()
+              }
             : item
         );
 
@@ -199,7 +222,7 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
       })
     );
 
-    completeConditionMutation.mutate(condition);
+    completeConditionMutation.mutate({ condition, action });
   };
 
   const taskGroups = groupedTasks(allTasks);
@@ -243,7 +266,7 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
           <ConditionsCard
             conditions={selectedProperty.conditions}
             disabled={completeConditionMutation.isPending}
-            onCompleteCondition={markConditionComplete}
+            onConditionAction={handleConditionAction}
           />
 
           <ProgressCard

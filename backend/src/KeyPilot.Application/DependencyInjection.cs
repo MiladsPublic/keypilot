@@ -14,6 +14,7 @@ public static class DependencyInjection
         });
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
         services.AddScoped<ITaskTemplateService, TaskTemplateService>();
+        services.AddScoped<ISettlementChecklistGenerator, SettlementChecklistGenerator>();
 
         return services;
     }

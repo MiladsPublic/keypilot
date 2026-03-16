@@ -9,7 +9,8 @@ namespace KeyPilot.Application.Properties.CreateProperty;
 public sealed class CreatePropertyHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
-    ITaskTemplateService taskTemplateService) : IRequestHandler<CreatePropertyCommand, CreatePropertyResponse>
+    ITaskTemplateService taskTemplateService,
+    ISettlementChecklistGenerator settlementChecklistGenerator) : IRequestHandler<CreatePropertyCommand, CreatePropertyResponse>
 {
     private static readonly IReadOnlyDictionary<ConditionType, int> DefaultConditionOffsets =
         new Dictionary<ConditionType, int>
@@ -58,17 +59,8 @@ public sealed class CreatePropertyHandler(
             }
         }
 
-        foreach (var title in taskTemplateService.GetPreSettlementTasks())
-        {
-            property.AddTask(title, TaskStage.PreSettlement, request.SettlementDate, conditionId: null, createdAtUtc);
-        }
-
-        foreach (var title in taskTemplateService.GetSettlementTasks())
-        {
-            property.AddTask(title, TaskStage.Settlement, request.SettlementDate, conditionId: null, createdAtUtc);
-        }
-
         property.RecalculateStatus(DateOnly.FromDateTime(createdAtUtc));
+        settlementChecklistGenerator.EnsureGenerated(property, createdAtUtc);
 
         await dbContext.AddPropertyAsync(property, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);

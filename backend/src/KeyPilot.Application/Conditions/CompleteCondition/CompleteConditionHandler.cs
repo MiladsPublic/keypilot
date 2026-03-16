@@ -1,13 +1,15 @@
 using KeyPilot.Application.Abstractions.Clock;
 using KeyPilot.Application.Abstractions.Persistence;
 using KeyPilot.Application.Properties.Common;
+using KeyPilot.Application.Properties.TaskGeneration;
 using MediatR;
 
 namespace KeyPilot.Application.Conditions.CompleteCondition;
 
 public sealed class CompleteConditionHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : IRequestHandler<CompleteConditionCommand, ConditionDto?>
+    IDateTimeProvider dateTimeProvider,
+    ISettlementChecklistGenerator settlementChecklistGenerator) : IRequestHandler<CompleteConditionCommand, ConditionDto?>
 {
     public async Task<ConditionDto?> Handle(CompleteConditionCommand request, CancellationToken cancellationToken)
     {
@@ -28,6 +30,7 @@ public sealed class CompleteConditionHandler(
         var now = dateTimeProvider.UtcNow;
         condition.MarkSatisfied(now);
         property.RecalculateStatus(DateOnly.FromDateTime(now));
+        settlementChecklistGenerator.EnsureGenerated(property, now);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
