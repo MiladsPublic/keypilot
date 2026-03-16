@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --canvas: #f6f1e8;
-  --ink: #1d3128;
-  --mist: #fefbf5;
-  --accent: #bd6d2c;
-  --line: rgba(29, 49, 40, 0.12);
-  --font-sans: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
-  --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+  --canvas: #f6f5f3;
+  --ink: #1f2a24;
+  --mist: #ffffff;
+  --accent: #2f6b4f;
+  --line: #e8e6e1;
+  --font-sans: "Inter", "IBM Plex Sans", "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-display: "Inter", "IBM Plex Sans", "Segoe UI", "Helvetica Neue", sans-serif;
 }
 
 * {
@@ -18,19 +18,14 @@
 
 html {
   min-height: 100%;
-  background:
-    radial-gradient(circle at top left, rgba(189, 109, 44, 0.16), transparent 30%),
-    linear-gradient(180deg, #f8f4ec 0%, #f2ede2 100%);
+  background: var(--canvas);
 }
 
 body {
   min-height: 100vh;
   margin: 0;
   color: var(--ink);
-  background:
-    linear-gradient(rgba(29, 49, 40, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(29, 49, 40, 0.04) 1px, transparent 1px);
-  background-size: 28px 28px;
+  background: var(--canvas);
 }
 
 a {
