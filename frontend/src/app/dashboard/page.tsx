@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+import { PurchaseDashboard } from "@/components/dashboard/purchase-dashboard";
 import { getProperties } from "@/features/properties/api/get-properties";
 
 export default async function DashboardPage() {
@@ -31,25 +32,10 @@ export default async function DashboardPage() {
 
       {properties.length === 0 ? (
         <div className="rounded-2xl border border-line bg-white p-6 text-sm text-ink/70">
-          No properties yet. Create your first workspace to start tracking the purchase journey.
+          You don't have any active purchases yet.
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {properties.map((property) => (
-            <Link
-              key={property.id}
-              href={`/properties/${property.id}`}
-              className="rounded-2xl border border-line bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-panel"
-            >
-              <p className="text-xs uppercase tracking-[0.16em] text-ink/55">{property.status}</p>
-              <h2 className="mt-2 text-lg font-semibold text-ink">{property.address}</h2>
-              <p className="mt-2 text-sm text-ink/70">Settlement: {property.settlementDate}</p>
-              <p className="mt-1 text-sm text-ink/70">
-                Tasks: {property.taskSummary.completed}/{property.taskSummary.total} complete
-              </p>
-            </Link>
-          ))}
-        </div>
+        <PurchaseDashboard initialProperties={properties} />
       )}
     </div>
   );

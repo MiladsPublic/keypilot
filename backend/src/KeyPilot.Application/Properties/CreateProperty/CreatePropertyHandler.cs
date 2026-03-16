@@ -53,7 +53,8 @@ public sealed class CreatePropertyHandler(
 
             foreach (var title in taskTemplateService.GetConditionTasks(conditionType))
             {
-                property.AddTask(title, TaskStage.Conditional, dueDate, condition.Id, createdAtUtc);
+                var taskDueDate = dueDate.AddDays(GetConditionTaskOffset(title));
+                property.AddTask(title, TaskStage.Conditional, taskDueDate, condition.Id, createdAtUtc);
             }
         }
 
@@ -85,6 +86,20 @@ public sealed class CreatePropertyHandler(
             "insurance" => ConditionType.Insurance,
             "solicitor_approval" => ConditionType.SolicitorApproval,
             _ => throw new ArgumentOutOfRangeException(nameof(value), "Unsupported condition type.")
+        };
+    }
+
+    private static int GetConditionTaskOffset(string title)
+    {
+        return title.Trim().ToLowerInvariant() switch
+        {
+            "submit finance documents" => -2,
+            "confirm lender approval" => -1,
+            "book building inspection" => -3,
+            "review building report" => -1,
+            "obtain lim report" => -3,
+            "review lim findings" => -1,
+            _ => 0
         };
     }
 }

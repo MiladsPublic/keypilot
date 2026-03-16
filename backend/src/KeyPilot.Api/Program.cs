@@ -1,4 +1,5 @@
 using KeyPilot.Api.Endpoints.Conditions;
+using KeyPilot.Api.Endpoints.Dev;
 using KeyPilot.Api.Endpoints.Properties;
 using KeyPilot.Api.Endpoints.Tasks;
 using KeyPilot.Api.Extensions;
@@ -22,6 +23,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    SeedEndpoint.Map(app);
 }
 
 app.MapHealthChecks("/health");

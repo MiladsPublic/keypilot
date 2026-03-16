@@ -19,6 +19,14 @@ public sealed class CompleteTaskHandler(
         }
 
         task.MarkCompleted(dateTimeProvider.UtcNow);
+
+        var property = await dbContext.GetPropertyByIdAsync(task.PropertyId, request.OwnerUserId, cancellationToken);
+
+        if (property is not null)
+        {
+            property.RecalculateStatus();
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return TaskDto.FromTask(task);

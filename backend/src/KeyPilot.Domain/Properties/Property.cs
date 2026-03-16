@@ -112,10 +112,9 @@ public sealed class Property : AuditableEntity
             return;
         }
 
-        var hasPreSettlementTasks = _tasks.Any(task =>
-            task.Stage == TaskStage.PreSettlement && task.Status == TaskStatus.Pending);
+        var daysUntilSettlement = SettlementDate.DayNumber - DateOnly.FromDateTime(DateTime.UtcNow).DayNumber;
 
-        Status = hasPreSettlementTasks
+        Status = daysUntilSettlement < 7
             ? PropertyStatus.PreSettlement
             : PropertyStatus.Unconditional;
     }

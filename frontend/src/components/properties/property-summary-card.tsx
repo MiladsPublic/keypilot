@@ -132,7 +132,7 @@ export function PropertySummaryCard({ property }: { property: Property }) {
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {property.conditions.map((condition) => (
-              <div key={condition.id} className="rounded-2xl border border-line bg-white p-4">
+              <div id={`condition-${condition.id}`} key={condition.id} className="rounded-2xl border border-line bg-white p-4">
                 <p className="text-sm font-semibold">{condition.type}</p>
                 <p className="mt-1 text-sm text-ink/70">Due: {formatDate(condition.dueDate)}</p>
                 <p className="mt-1 text-sm text-ink/70">Status: {condition.status}</p>
