@@ -2,17 +2,20 @@ import { CheckCircle2 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { type PurchaseReadinessSummary } from "@/features/properties/types/property";
 
 export function ProgressCard({
   completed,
   total,
   pending,
-  openConditions
+  openConditions,
+  readinessSummary
 }: {
   completed: number;
   total: number;
   pending: number;
   openConditions: number;
+  readinessSummary?: PurchaseReadinessSummary;
 }) {
   const progressValue = total === 0 ? 0 : Math.round((completed / total) * 100);
 
@@ -31,6 +34,19 @@ export function ProgressCard({
         <Progress value={progressValue} />
         <p className="text-sm text-ink/65">{pending} tasks pending</p>
         <p className="text-sm text-ink/65">{openConditions} conditions still open</p>
+        {readinessSummary ? (
+          <>
+            <p className="text-sm text-ink/65">
+              Mode: {readinessSummary.mode === "settlement" ? "Settlement readiness" : "Conditional gating"}
+            </p>
+            <p className="text-sm text-ink/65">
+              {readinessSummary.overdueConditions + readinessSummary.overdueTasks} overdue items
+            </p>
+            {readinessSummary.nextAction ? (
+              <p className="text-sm text-ink/75">Next action: {readinessSummary.nextAction}</p>
+            ) : null}
+          </>
+        ) : null}
       </CardContent>
     </Card>
   );

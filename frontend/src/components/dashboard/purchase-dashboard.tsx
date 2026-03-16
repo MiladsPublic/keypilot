@@ -250,7 +250,8 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
             completed={selectedProperty.taskSummary.completed}
             total={selectedProperty.taskSummary.total}
             pending={selectedProperty.taskSummary.pending}
-            openConditions={selectedProperty.conditions.filter((condition) => condition.status !== "satisfied" && condition.status !== "waived").length}
+            openConditions={selectedProperty.readinessSummary.openConditions}
+            readinessSummary={selectedProperty.readinessSummary}
           />
         </div>
 

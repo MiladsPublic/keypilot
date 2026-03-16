@@ -211,7 +211,8 @@ export function PropertySummaryCard({ property }: { property: Property }) {
               completed={localProperty.taskSummary.completed}
               total={localProperty.taskSummary.total}
               pending={localProperty.taskSummary.pending}
-              openConditions={localProperty.conditions.filter((condition) => condition.status !== "satisfied" && condition.status !== "waived").length}
+              openConditions={localProperty.readinessSummary.openConditions}
+              readinessSummary={localProperty.readinessSummary}
             />
           </div>
         </TabsContent>

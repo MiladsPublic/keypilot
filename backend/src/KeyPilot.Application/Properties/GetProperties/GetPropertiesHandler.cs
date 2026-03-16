@@ -15,6 +15,11 @@ public sealed class GetPropertiesHandler(
         var properties = await dbContext.ListPropertiesByOwnerAsync(request.OwnerUserId, cancellationToken);
         var today = DateOnly.FromDateTime(dateTimeProvider.UtcNow);
 
+        foreach (var property in properties)
+        {
+            property.RecalculateStatus(today);
+        }
+
         return properties
             .OrderByDescending(property => property.CreatedAtUtc)
             .Select(property => PropertyDto.FromProperty(property, today))

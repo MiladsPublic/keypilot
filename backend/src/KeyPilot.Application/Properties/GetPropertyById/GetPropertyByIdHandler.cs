@@ -14,6 +14,12 @@ public sealed class GetPropertyByIdHandler(
         var property = await dbContext.GetPropertyByIdAsync(request.Id, request.OwnerUserId, cancellationToken);
         var today = DateOnly.FromDateTime(dateTimeProvider.UtcNow);
 
+        if (property is not null)
+        {
+            // Keep stage/expiry derivation canonical even for read-only flows.
+            property.RecalculateStatus(today);
+        }
+
         return property is null ? null : PropertyDto.FromProperty(property, today);
     }
 }
