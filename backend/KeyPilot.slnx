@@ -4,6 +4,8 @@
     <Project Path="src/KeyPilot.Application/KeyPilot.Application.csproj" />
     <Project Path="src/KeyPilot.Domain/KeyPilot.Domain.csproj" />
     <Project Path="src/KeyPilot.Infrastructure/KeyPilot.Infrastructure.csproj" />
+    <Project Path="src/KeyPilot.Workflows/KeyPilot.Workflows.csproj" />
+    <Project Path="src/KeyPilot.Worker/KeyPilot.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/KeyPilot.Api.Tests/KeyPilot.Api.Tests.csproj" />

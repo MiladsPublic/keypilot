@@ -1,4 +1,8 @@
 using FluentValidation;
+using KeyPilot.Application.Abstractions.Workflow;
+using KeyPilot.Application.Properties.Lifecycle;
+using KeyPilot.Application.Properties.Reminders;
+using KeyPilot.Application.Properties.Summary;
 using KeyPilot.Application.Properties.TaskGeneration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,6 +19,10 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
         services.AddScoped<ITaskTemplateService, TaskTemplateService>();
         services.AddScoped<ISettlementChecklistGenerator, SettlementChecklistGenerator>();
+        services.AddScoped<IWorkspaceLifecycleService, WorkspaceLifecycleService>();
+        services.AddScoped<IWorkspaceSummaryService, WorkspaceSummaryService>();
+        services.AddScoped<IWorkspaceReminderSyncService, WorkspaceReminderSyncService>();
+        services.AddScoped<IWorkspaceWorkflowOrchestrator, NoopWorkspaceWorkflowOrchestrator>();
 
         return services;
     }

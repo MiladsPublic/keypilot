@@ -5,6 +5,7 @@ namespace KeyPilot.Domain.Properties;
 public sealed class Property : AuditableEntity
 {
     private readonly List<Condition> _conditions = [];
+    private readonly List<WorkspaceReminder> _reminders = [];
     private readonly List<PropertyTask> _tasks = [];
 
     private Property()
@@ -56,6 +57,8 @@ public sealed class Property : AuditableEntity
 
     public IReadOnlyCollection<Condition> Conditions => _conditions;
 
+    public IReadOnlyCollection<WorkspaceReminder> Reminders => _reminders;
+
     public IReadOnlyCollection<PropertyTask> Tasks => _tasks;
 
     public static Property Create(
@@ -96,6 +99,17 @@ public sealed class Property : AuditableEntity
         var task = new PropertyTask(Id, conditionId, title, stage, dueDate, createdAtUtc);
         _tasks.Add(task);
         return task;
+    }
+
+    public WorkspaceReminder AddReminder(
+        string key,
+        string title,
+        DateTime scheduledForUtc,
+        DateTime createdAtUtc)
+    {
+        var reminder = WorkspaceReminder.Create(Id, key, title, scheduledForUtc, createdAtUtc);
+        _reminders.Add(reminder);
+        return reminder;
     }
 
     public void MarkSettlementComplete(DateTime settledAtUtc)

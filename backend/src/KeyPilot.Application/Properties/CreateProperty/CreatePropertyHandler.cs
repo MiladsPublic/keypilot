@@ -1,5 +1,9 @@
 using KeyPilot.Application.Abstractions.Clock;
 using KeyPilot.Application.Abstractions.Persistence;
+using KeyPilot.Application.Abstractions.Workflow;
+using KeyPilot.Application.Properties.Lifecycle;
+using KeyPilot.Application.Properties.Reminders;
+using KeyPilot.Application.Properties.Summary;
 using KeyPilot.Application.Properties.TaskGeneration;
 using KeyPilot.Domain.Properties;
 using MediatR;
@@ -9,6 +13,10 @@ namespace KeyPilot.Application.Properties.CreateProperty;
 public sealed class CreatePropertyHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
+    IWorkspaceWorkflowOrchestrator workflowOrchestrator,
+    IWorkspaceLifecycleService workspaceLifecycleService,
+    IWorkspaceReminderSyncService workspaceReminderSyncService,
+    IWorkspaceSummaryService workspaceSummaryService,
     ITaskTemplateService taskTemplateService,
     ISettlementChecklistGenerator settlementChecklistGenerator) : IRequestHandler<CreatePropertyCommand, CreatePropertyResponse>
 {
@@ -32,7 +40,7 @@ public sealed class CreatePropertyHandler(
             request.PurchasePrice,
             request.DepositAmount,
             request.OwnerUserId,
-            workspaceId: null,
+            workspaceId: Guid.NewGuid(),
             createdAtUtc: createdAtUtc);
 
         foreach (var title in taskTemplateService.GetAcceptedOfferTasks())
@@ -59,13 +67,31 @@ public sealed class CreatePropertyHandler(
             }
         }
 
-        property.RecalculateStatus(DateOnly.FromDateTime(createdAtUtc));
+        workspaceLifecycleService.ApplyDerivedState(property, DateOnly.FromDateTime(createdAtUtc));
         settlementChecklistGenerator.EnsureGenerated(property, createdAtUtc);
+        await workspaceReminderSyncService.SyncAsync(property, createdAtUtc, cancellationToken);
 
         await dbContext.AddPropertyAsync(property, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return CreatePropertyResponse.FromProperty(property, DateOnly.FromDateTime(createdAtUtc));
+        if (property.WorkspaceId.HasValue)
+        {
+            var pendingConditionDueDates = property.Conditions
+                .Where(condition => condition.Status == ConditionStatus.Pending)
+                .Select(condition => condition.DueDate)
+                .ToArray();
+
+            await workflowOrchestrator.StartAsync(
+                new WorkspaceWorkflowStartInput(
+                    property.WorkspaceId.Value,
+                    property.Id,
+                    property.OwnerUserId,
+                    property.SettlementDate,
+                    pendingConditionDueDates),
+                cancellationToken);
+        }
+
+        return workspaceSummaryService.BuildCreateResponse(property, DateOnly.FromDateTime(createdAtUtc));
     }
 
     private static ConditionType ParseConditionType(string value)

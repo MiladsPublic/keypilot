@@ -70,6 +70,11 @@ public sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
             .HasForeignKey(condition => condition.PropertyId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasMany(property => property.Reminders)
+            .WithOne()
+            .HasForeignKey(reminder => reminder.PropertyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasMany(property => property.Tasks)
             .WithOne()
             .HasForeignKey(task => task.PropertyId)

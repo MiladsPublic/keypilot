@@ -1,6 +1,9 @@
 using KeyPilot.Application.Abstractions.Clock;
 using KeyPilot.Application.Abstractions.Persistence;
+using KeyPilot.Application.Abstractions.Workflow;
+using KeyPilot.Application.Properties.Lifecycle;
 using KeyPilot.Application.Properties.Common;
+using KeyPilot.Application.Properties.Reminders;
 using KeyPilot.Application.Properties.TaskGeneration;
 using MediatR;
 
@@ -9,6 +12,9 @@ namespace KeyPilot.Application.Conditions.CompleteCondition;
 public sealed class CompleteConditionHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
+    IWorkspaceWorkflowOrchestrator workflowOrchestrator,
+    IWorkspaceLifecycleService workspaceLifecycleService,
+    IWorkspaceReminderSyncService workspaceReminderSyncService,
     ISettlementChecklistGenerator settlementChecklistGenerator) : IRequestHandler<CompleteConditionCommand, ConditionDto?>
 {
     public async Task<ConditionDto?> Handle(CompleteConditionCommand request, CancellationToken cancellationToken)
@@ -29,10 +35,22 @@ public sealed class CompleteConditionHandler(
 
         var now = dateTimeProvider.UtcNow;
         condition.MarkSatisfied(now);
-        property.RecalculateStatus(DateOnly.FromDateTime(now));
+        workspaceLifecycleService.ApplyDerivedState(property, DateOnly.FromDateTime(now));
         settlementChecklistGenerator.EnsureGenerated(property, now);
+        await workspaceReminderSyncService.SyncAsync(property, now, cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        if (property.WorkspaceId.HasValue)
+        {
+            await workflowOrchestrator.SignalAsync(
+                new WorkspaceWorkflowSignal(
+                    property.WorkspaceId.Value,
+                    EventType: "condition_satisfied",
+                    OccurredAtUtc: now,
+                    ConditionId: condition.Id),
+                cancellationToken);
+        }
 
         return ConditionDto.FromCondition(condition);
     }

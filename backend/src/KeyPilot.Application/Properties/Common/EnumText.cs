@@ -18,6 +18,11 @@ internal static class EnumText
         };
     }
 
+    public static string WorkspaceStage(PropertyStatus status)
+    {
+        return PropertyStatus(status);
+    }
+
     public static string ConditionType(ConditionType type)
     {
         return type switch
@@ -63,6 +68,17 @@ internal static class EnumText
         {
             Domain.Properties.TaskStatus.Pending => "pending",
             Domain.Properties.TaskStatus.Completed => "completed",
+            _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
+        };
+    }
+
+    public static string WorkspaceReminderStatus(WorkspaceReminderStatus status)
+    {
+        return status switch
+        {
+            Domain.Properties.WorkspaceReminderStatus.Pending => "pending",
+            Domain.Properties.WorkspaceReminderStatus.Sent => "sent",
+            Domain.Properties.WorkspaceReminderStatus.Cancelled => "cancelled",
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
     }

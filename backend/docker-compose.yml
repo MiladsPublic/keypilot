@@ -11,5 +11,12 @@ services:
     volumes:
       - keypilot-postgres-data:/var/lib/postgresql/data
 
+  temporal:
+    image: temporalio/temporalite:latest
+    container_name: keypilot-temporal
+    ports:
+      - "7233:7233"
+      - "8233:8233"
+
 volumes:
   keypilot-postgres-data:

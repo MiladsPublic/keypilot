@@ -186,6 +186,61 @@ namespace KeyPilot.Infrastructure.Persistence.Migrations
                     b.ToTable("tasks", (string)null);
                 });
 
+            modelBuilder.Entity("KeyPilot.Domain.Properties.WorkspaceReminder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime?>("CancelledAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_at_utc");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)")
+                        .HasColumnName("key");
+
+                    b.Property<Guid>("PropertyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("property_id");
+
+                    b.Property<DateTime>("ScheduledForUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("scheduled_for_utc");
+
+                    b.Property<DateTime?>("SentAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_at_utc");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)")
+                        .HasColumnName("title");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.HasIndex("PropertyId");
+
+                    b.ToTable("workspace_reminders", (string)null);
+                });
+
             modelBuilder.Entity("KeyPilot.Domain.Properties.Condition", b =>
                 {
                     b.HasOne("KeyPilot.Domain.Properties.Property", null)
@@ -204,9 +259,20 @@ namespace KeyPilot.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("KeyPilot.Domain.Properties.WorkspaceReminder", b =>
+                {
+                    b.HasOne("KeyPilot.Domain.Properties.Property", null)
+                        .WithMany("Reminders")
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("KeyPilot.Domain.Properties.Property", b =>
                 {
                     b.Navigation("Conditions");
+
+                    b.Navigation("Reminders");
 
                     b.Navigation("Tasks");
                 });

@@ -1,12 +1,16 @@
 using KeyPilot.Application.Abstractions.Clock;
 using KeyPilot.Application.Abstractions.Persistence;
+using KeyPilot.Application.Properties.Lifecycle;
+using KeyPilot.Application.Properties.Summary;
 using MediatR;
 
 namespace KeyPilot.Application.Properties.GetPropertyById;
 
 public sealed class GetPropertyByIdHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider)
+    IDateTimeProvider dateTimeProvider,
+    IWorkspaceLifecycleService workspaceLifecycleService,
+    IWorkspaceSummaryService workspaceSummaryService)
     : IRequestHandler<GetPropertyByIdQuery, PropertyDto?>
 {
     public async Task<PropertyDto?> Handle(GetPropertyByIdQuery request, CancellationToken cancellationToken)
@@ -16,10 +20,9 @@ public sealed class GetPropertyByIdHandler(
 
         if (property is not null)
         {
-            // Keep stage/expiry derivation canonical even for read-only flows.
-            property.RecalculateStatus(today);
+            workspaceLifecycleService.ApplyDerivedState(property, today);
         }
 
-        return property is null ? null : PropertyDto.FromProperty(property, today);
+        return property is null ? null : workspaceSummaryService.BuildPropertyDto(property, today);
     }
 }

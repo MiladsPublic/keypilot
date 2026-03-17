@@ -7,6 +7,7 @@ public sealed record PropertyDto(
     Guid Id,
     Guid? WorkspaceId,
     string Address,
+    string WorkspaceStage,
     string Status,
     DateOnly AcceptedOfferDate,
     DateOnly? UnconditionalDate,
@@ -16,6 +17,7 @@ public sealed record PropertyDto(
     int DaysUntilSettlement,
     decimal? PurchasePrice,
     decimal? DepositAmount,
+    IReadOnlyCollection<WorkspaceReminderDto> Reminders,
     IReadOnlyCollection<ConditionDto> Conditions,
     IReadOnlyCollection<TaskDto> Tasks,
     TaskSummaryDto TaskSummary,
@@ -28,6 +30,7 @@ public sealed record PropertyDto(
             property.Id,
             property.WorkspaceId,
             property.Address,
+            EnumText.WorkspaceStage(property.Status),
             EnumText.PropertyStatus(property.Status),
             property.AcceptedOfferDate,
             property.UnconditionalDate,
@@ -37,6 +40,10 @@ public sealed record PropertyDto(
             PropertyMvpDtoMapper.DaysUntilSettlement(property, today),
             property.PurchasePrice,
             property.DepositAmount,
+            property.Reminders
+                .OrderBy(reminder => reminder.ScheduledForUtc)
+                .Select(WorkspaceReminderDto.FromReminder)
+                .ToArray(),
             property.Conditions
                 .OrderBy(condition => condition.DueDate)
                 .Select(ConditionDto.FromCondition)

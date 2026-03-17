@@ -9,6 +9,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 {
     public DbSet<Property> Properties => Set<Property>();
     public DbSet<Condition> Conditions => Set<Condition>();
+    public DbSet<WorkspaceReminder> Reminders => Set<WorkspaceReminder>();
     public DbSet<PropertyTask> Tasks => Set<PropertyTask>();
 
     public async Task AddPropertyAsync(Property property, CancellationToken cancellationToken)
@@ -21,6 +22,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
         return await Properties
             .Where(property => property.OwnerUserId == ownerUserId)
             .Include(property => property.Conditions)
+            .Include(property => property.Reminders)
             .Include(property => property.Tasks)
             .ToArrayAsync(cancellationToken);
     }
@@ -29,8 +31,26 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     {
         return Properties
             .Include(property => property.Conditions)
+            .Include(property => property.Reminders)
             .Include(property => property.Tasks)
             .SingleOrDefaultAsync(property => property.Id == id && property.OwnerUserId == ownerUserId, cancellationToken);
+    }
+
+    public Task<Property?> GetPropertyByWorkspaceIdAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        return Properties
+            .Include(property => property.Conditions)
+            .Include(property => property.Reminders)
+            .Include(property => property.Tasks)
+            .SingleOrDefaultAsync(property => property.WorkspaceId == workspaceId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyCollection<WorkspaceReminder>> ListRemindersByPropertyAsync(Guid propertyId, CancellationToken cancellationToken)
+    {
+        return await Reminders
+            .Where(reminder => reminder.PropertyId == propertyId)
+            .OrderBy(reminder => reminder.ScheduledForUtc)
+            .ToArrayAsync(cancellationToken);
     }
 
     public Task<Condition?> GetConditionByIdAsync(Guid id, string ownerUserId, CancellationToken cancellationToken)
