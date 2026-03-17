@@ -82,4 +82,17 @@ internal static class EnumText
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
     }
+
+    public static string BuyingMethod(BuyingMethod method)
+    {
+        return method switch
+        {
+            Domain.Properties.BuyingMethod.PrivateSale => "private_sale",
+            Domain.Properties.BuyingMethod.Auction => "auction",
+            Domain.Properties.BuyingMethod.Negotiation => "negotiation",
+            Domain.Properties.BuyingMethod.Tender => "tender",
+            Domain.Properties.BuyingMethod.Deadline => "deadline",
+            _ => throw new ArgumentOutOfRangeException(nameof(method), method, null)
+        };
+    }
 }

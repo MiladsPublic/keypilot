@@ -76,6 +76,8 @@ public sealed class WorkspaceWorkflowOutboxDispatcherService(
                     workspace.WorkspaceId.Value,
                     workspace.Id,
                     workspace.OwnerUserId,
+                    workspace.BuyingMethod,
+                    workspace.AcceptedOfferDate,
                     workspace.SettlementDate,
                     pendingConditionDueDates),
                 cancellationToken);

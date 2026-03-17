@@ -13,6 +13,15 @@ public sealed class CreatePropertyValidator : AbstractValidator<CreatePropertyCo
         "solicitor_approval"
     ];
 
+    private static readonly string[] SupportedBuyingMethods =
+    [
+        "private_sale",
+        "auction",
+        "negotiation",
+        "tender",
+        "deadline"
+    ];
+
     public CreatePropertyValidator()
     {
         RuleFor(x => x.Address)
@@ -28,6 +37,11 @@ public sealed class CreatePropertyValidator : AbstractValidator<CreatePropertyCo
         RuleFor(x => x.SettlementDate)
             .NotEmpty()
             .GreaterThanOrEqualTo(x => x.AcceptedOfferDate);
+
+        RuleFor(x => x.BuyingMethod)
+            .NotEmpty()
+            .Must(method => SupportedBuyingMethods.Contains(method.Trim().ToLowerInvariant()))
+            .WithMessage("Unsupported buying method.");
 
         RuleFor(x => x.PurchasePrice)
             .GreaterThan(0)

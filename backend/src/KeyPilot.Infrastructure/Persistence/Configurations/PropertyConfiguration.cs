@@ -36,6 +36,14 @@ public sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
             .HasMaxLength(32)
             .IsRequired();
 
+        builder.Property(property => property.BuyingMethod)
+            .HasColumnName("buying_method")
+            .HasConversion(
+                value => value.ToString().ToLowerInvariant(),
+                value => Enum.Parse<BuyingMethod>(value, ignoreCase: true))
+            .HasMaxLength(32)
+            .IsRequired();
+
         builder.Property(property => property.AcceptedOfferDate)
             .HasColumnName("accepted_offer_date")
             .IsRequired();

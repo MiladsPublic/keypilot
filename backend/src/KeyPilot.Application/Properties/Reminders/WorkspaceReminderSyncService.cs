@@ -56,6 +56,14 @@ internal sealed class WorkspaceReminderSyncService(IApplicationDbContext dbConte
                 ToUtcAtNineAm(condition.DueDate, nowUtc));
         }
 
+        if (workspace.BuyingMethod == BuyingMethod.Auction)
+        {
+            yield return (
+                "auction:readiness",
+                "Auction readiness check",
+                ToUtcAtNineAm(workspace.AcceptedOfferDate.AddDays(-1), nowUtc));
+        }
+
         yield return (
             "settlement:due",
             "Settlement date reminder",

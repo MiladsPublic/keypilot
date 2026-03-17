@@ -33,6 +33,7 @@ public sealed class CreatePropertyHandler(
     public async Task<CreatePropertyResponse> Handle(CreatePropertyCommand request, CancellationToken cancellationToken)
     {
         var createdAtUtc = dateTimeProvider.UtcNow;
+        var buyingMethod = ParseBuyingMethod(request.BuyingMethod);
         var property = Property.Create(
             request.Address.Trim(),
             request.AcceptedOfferDate,
@@ -41,7 +42,8 @@ public sealed class CreatePropertyHandler(
             request.DepositAmount,
             request.OwnerUserId,
             workspaceId: Guid.NewGuid(),
-            createdAtUtc: createdAtUtc);
+            createdAtUtc: createdAtUtc,
+            buyingMethod: buyingMethod);
 
         foreach (var title in taskTemplateService.GetAcceptedOfferTasks())
         {
@@ -102,6 +104,19 @@ public sealed class CreatePropertyHandler(
             "obtain lim report" => -3,
             "review lim findings" => -1,
             _ => 0
+        };
+    }
+
+    private static BuyingMethod ParseBuyingMethod(string value)
+    {
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "private_sale" => BuyingMethod.PrivateSale,
+            "auction" => BuyingMethod.Auction,
+            "negotiation" => BuyingMethod.Negotiation,
+            "tender" => BuyingMethod.Tender,
+            "deadline" => BuyingMethod.Deadline,
+            _ => throw new ArgumentOutOfRangeException(nameof(value), "Unsupported buying method.")
         };
     }
 }

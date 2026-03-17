@@ -14,6 +14,11 @@ public sealed class WorkspaceWorkflow
         _pendingReminderDatesUtc.Add(input.SettlementReminderAtUtc);
         _pendingReminderDatesUtc.AddRange(input.InitialConditionReminderDatesUtc);
 
+        if (input.BuyingMethod == "auction" && input.MethodSpecificReminderAtUtc.HasValue)
+        {
+            _pendingReminderDatesUtc.Add(input.MethodSpecificReminderAtUtc.Value);
+        }
+
         while (!_isClosed)
         {
             var nextReminderUtc = GetNextReminderUtc();

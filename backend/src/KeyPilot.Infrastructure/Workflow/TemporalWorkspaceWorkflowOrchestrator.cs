@@ -1,4 +1,5 @@
 using KeyPilot.Application.Abstractions.Workflow;
+using KeyPilot.Domain.Properties;
 using KeyPilot.Workflows;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -26,6 +27,10 @@ public sealed class TemporalWorkspaceWorkflowOrchestrator(
         var reminders = input.PendingConditionDueDates
             .Select(date => date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddHours(9))
             .ToArray();
+        var buyingMethod = ToWorkflowBuyingMethod(input.BuyingMethod);
+        var methodSpecificReminderAtUtc = input.BuyingMethod == BuyingMethod.Auction
+            ? input.AcceptedOfferDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(-1).AddHours(9)
+            : (DateTime?)null;
 
         try
         {
@@ -35,6 +40,8 @@ public sealed class TemporalWorkspaceWorkflowOrchestrator(
                         input.WorkspaceId,
                         input.PropertyId,
                         input.OwnerUserId,
+                        buyingMethod,
+                        methodSpecificReminderAtUtc,
                         input.SettlementDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddHours(9),
                         reminders)),
                 new WorkflowOptions(
@@ -72,15 +79,23 @@ public sealed class TemporalWorkspaceWorkflowOrchestrator(
                     signal.OccurredAtUtc,
                     signal.TaskId,
                     signal.ConditionId)));
-
-        if (signal.EventType is "condition_satisfied" or "condition_waived" or "condition_failed")
-        {
-            await handle.SignalAsync(workflow => workflow.SignalReminderScheduleAsync(signal.OccurredAtUtc.AddMinutes(1)));
-        }
     }
 
     private static string WorkflowId(Guid workspaceId)
     {
         return $"workspace-{workspaceId}";
+    }
+
+    private static string ToWorkflowBuyingMethod(BuyingMethod buyingMethod)
+    {
+        return buyingMethod switch
+        {
+            BuyingMethod.PrivateSale => "private_sale",
+            BuyingMethod.Auction => "auction",
+            BuyingMethod.Negotiation => "negotiation",
+            BuyingMethod.Tender => "tender",
+            BuyingMethod.Deadline => "deadline",
+            _ => "private_sale"
+        };
     }
 }

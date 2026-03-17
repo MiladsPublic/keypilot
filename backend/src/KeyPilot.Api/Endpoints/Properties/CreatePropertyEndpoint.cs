@@ -13,6 +13,7 @@ public static class CreatePropertyEndpoint
         string Address,
         DateOnly AcceptedOfferDate,
         DateOnly SettlementDate,
+        string? BuyingMethod,
         decimal? PurchasePrice,
         decimal? DepositAmount,
         IReadOnlyCollection<CreatePropertyConditionInput>? Conditions);
@@ -45,6 +46,7 @@ public static class CreatePropertyEndpoint
             request.Address,
             request.AcceptedOfferDate,
             request.SettlementDate,
+            request.BuyingMethod ?? "private_sale",
             request.PurchasePrice,
             request.DepositAmount,
             request.Conditions,

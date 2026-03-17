@@ -18,6 +18,7 @@ public sealed class Property : AuditableEntity
         DateOnly settlementDate,
         decimal? purchasePrice,
         decimal? depositAmount,
+        BuyingMethod buyingMethod,
         string ownerUserId,
         Guid? workspaceId,
         DateTime createdAtUtc)
@@ -27,6 +28,7 @@ public sealed class Property : AuditableEntity
         SettlementDate = settlementDate;
         PurchasePrice = purchasePrice;
         DepositAmount = depositAmount;
+        BuyingMethod = buyingMethod;
         OwnerUserId = ownerUserId;
         WorkspaceId = workspaceId;
         Status = PropertyStatus.Conditional;
@@ -49,6 +51,8 @@ public sealed class Property : AuditableEntity
 
     public decimal? DepositAmount { get; private set; }
 
+    public BuyingMethod BuyingMethod { get; private set; } = BuyingMethod.PrivateSale;
+
     public DateOnly? UnconditionalDate { get; private set; }
 
     public DateOnly? SettledDate { get; private set; }
@@ -69,7 +73,8 @@ public sealed class Property : AuditableEntity
         decimal? depositAmount,
         string ownerUserId,
         Guid? workspaceId,
-        DateTime createdAtUtc)
+        DateTime createdAtUtc,
+        BuyingMethod buyingMethod = BuyingMethod.PrivateSale)
     {
         return new Property(
             address,
@@ -77,6 +82,7 @@ public sealed class Property : AuditableEntity
             settlementDate,
             purchasePrice,
             depositAmount,
+            buyingMethod,
             ownerUserId,
             workspaceId,
             createdAtUtc);

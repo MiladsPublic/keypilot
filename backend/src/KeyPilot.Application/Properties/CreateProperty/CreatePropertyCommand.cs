@@ -11,6 +11,7 @@ public sealed record CreatePropertyCommand(
     string Address,
     DateOnly AcceptedOfferDate,
     DateOnly SettlementDate,
+    string BuyingMethod,
     decimal? PurchasePrice,
     decimal? DepositAmount,
     IReadOnlyCollection<CreatePropertyConditionInput>? Conditions,

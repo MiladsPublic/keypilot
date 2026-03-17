@@ -1,9 +1,13 @@
 using KeyPilot.Application.Abstractions.Persistence;
+using KeyPilot.Application.Properties.Lifecycle;
 using MediatR;
 
 namespace KeyPilot.Application.Properties.Reminders.ProcessWorkspaceReminderTick;
 
-public sealed class ProcessWorkspaceReminderTickHandler(IApplicationDbContext dbContext)
+public sealed class ProcessWorkspaceReminderTickHandler(
+    IApplicationDbContext dbContext,
+    IWorkspaceLifecycleService workspaceLifecycleService,
+    IWorkspaceReminderSyncService workspaceReminderSyncService)
     : IRequestHandler<ProcessWorkspaceReminderTickCommand, bool>
 {
     public async Task<bool> Handle(ProcessWorkspaceReminderTickCommand request, CancellationToken cancellationToken)
@@ -16,6 +20,9 @@ public sealed class ProcessWorkspaceReminderTickHandler(IApplicationDbContext db
         }
 
         var nowUtc = request.TriggeredAtUtc;
+
+        workspaceLifecycleService.ApplyDerivedState(workspace, DateOnly.FromDateTime(nowUtc));
+        await workspaceReminderSyncService.SyncAsync(workspace, nowUtc, cancellationToken);
 
         foreach (var reminder in workspace.Reminders)
         {
