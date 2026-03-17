@@ -11,7 +11,7 @@ namespace KeyPilot.Application.Properties.CancelProperty;
 public sealed class CancelPropertyHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
-    IWorkspaceWorkflowOrchestrator workflowOrchestrator,
+    IWorkspaceWorkflowOutbox workflowOutbox,
     IWorkspaceReminderSyncService workspaceReminderSyncService,
     IWorkspaceSummaryService workspaceSummaryService)
     : IRequestHandler<CancelPropertyCommand, PropertyDto?>
@@ -29,17 +29,16 @@ public sealed class CancelPropertyHandler(
         property.MarkCancelled(now);
         await workspaceReminderSyncService.SyncAsync(property, now, cancellationToken);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-
         if (property.WorkspaceId.HasValue)
         {
-            await workflowOrchestrator.SignalAsync(
-                new WorkspaceWorkflowSignal(
+            await workflowOutbox.EnqueueWorkspaceSignalAsync(
                     property.WorkspaceId.Value,
-                    EventType: "workspace_cancelled",
-                    OccurredAtUtc: now),
+                    eventType: "workspace_cancelled",
+                    occurredAtUtc: now,
                 cancellationToken);
         }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return workspaceSummaryService.BuildPropertyDto(property, DateOnly.FromDateTime(now));
     }

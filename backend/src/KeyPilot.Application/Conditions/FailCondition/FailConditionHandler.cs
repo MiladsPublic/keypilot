@@ -11,7 +11,7 @@ namespace KeyPilot.Application.Conditions.FailCondition;
 public sealed class FailConditionHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
-    IWorkspaceWorkflowOrchestrator workflowOrchestrator,
+    IWorkspaceWorkflowOutbox workflowOutbox,
     IWorkspaceLifecycleService workspaceLifecycleService,
     IWorkspaceReminderSyncService workspaceReminderSyncService) : IRequestHandler<FailConditionCommand, ConditionDto?>
 {
@@ -36,18 +36,17 @@ public sealed class FailConditionHandler(
         workspaceLifecycleService.ApplyDerivedState(property, DateOnly.FromDateTime(now));
         await workspaceReminderSyncService.SyncAsync(property, now, cancellationToken);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-
         if (property.WorkspaceId.HasValue)
         {
-            await workflowOrchestrator.SignalAsync(
-                new WorkspaceWorkflowSignal(
+            await workflowOutbox.EnqueueWorkspaceSignalAsync(
                     property.WorkspaceId.Value,
-                    EventType: "condition_failed",
-                    OccurredAtUtc: now,
-                    ConditionId: condition.Id),
-                cancellationToken);
+                    eventType: "condition_failed",
+                    occurredAtUtc: now,
+                    cancellationToken: cancellationToken,
+                    conditionId: condition.Id);
         }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return ConditionDto.FromCondition(condition);
     }

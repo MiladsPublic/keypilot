@@ -12,7 +12,7 @@ namespace KeyPilot.Application.Conditions.WaiveCondition;
 public sealed class WaiveConditionHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
-    IWorkspaceWorkflowOrchestrator workflowOrchestrator,
+    IWorkspaceWorkflowOutbox workflowOutbox,
     IWorkspaceLifecycleService workspaceLifecycleService,
     IWorkspaceReminderSyncService workspaceReminderSyncService,
     ISettlementChecklistGenerator settlementChecklistGenerator) : IRequestHandler<WaiveConditionCommand, ConditionDto?>
@@ -39,18 +39,17 @@ public sealed class WaiveConditionHandler(
         settlementChecklistGenerator.EnsureGenerated(property, now);
         await workspaceReminderSyncService.SyncAsync(property, now, cancellationToken);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-
         if (property.WorkspaceId.HasValue)
         {
-            await workflowOrchestrator.SignalAsync(
-                new WorkspaceWorkflowSignal(
+            await workflowOutbox.EnqueueWorkspaceSignalAsync(
                     property.WorkspaceId.Value,
-                    EventType: "condition_waived",
-                    OccurredAtUtc: now,
-                    ConditionId: condition.Id),
-                cancellationToken);
+                    eventType: "condition_waived",
+                    occurredAtUtc: now,
+                    cancellationToken: cancellationToken,
+                    conditionId: condition.Id);
         }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return ConditionDto.FromCondition(condition);
     }

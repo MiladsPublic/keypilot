@@ -5,6 +5,7 @@ using KeyPilot.Api.Endpoints.Tasks;
 using KeyPilot.Api.Extensions;
 using KeyPilot.Application;
 using KeyPilot.Infrastructure;
+using KeyPilot.Infrastructure.Workflow;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,8 @@ builder.Services
     .AddApiServices(builder.Configuration)
     .AddApplication()
     .AddInfrastructure(builder.Configuration);
+
+builder.Services.AddHostedService<WorkspaceWorkflowOutboxDispatcherService>();
 
 var app = builder.Build();
 

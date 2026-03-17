@@ -13,7 +13,7 @@ namespace KeyPilot.Application.Properties.CreateProperty;
 public sealed class CreatePropertyHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
-    IWorkspaceWorkflowOrchestrator workflowOrchestrator,
+    IWorkspaceWorkflowOutbox workflowOutbox,
     IWorkspaceLifecycleService workspaceLifecycleService,
     IWorkspaceReminderSyncService workspaceReminderSyncService,
     IWorkspaceSummaryService workspaceSummaryService,
@@ -72,24 +72,8 @@ public sealed class CreatePropertyHandler(
         await workspaceReminderSyncService.SyncAsync(property, createdAtUtc, cancellationToken);
 
         await dbContext.AddPropertyAsync(property, cancellationToken);
+        await workflowOutbox.EnqueueWorkspaceCreatedAsync(property, createdAtUtc, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
-
-        if (property.WorkspaceId.HasValue)
-        {
-            var pendingConditionDueDates = property.Conditions
-                .Where(condition => condition.Status == ConditionStatus.Pending)
-                .Select(condition => condition.DueDate)
-                .ToArray();
-
-            await workflowOrchestrator.StartAsync(
-                new WorkspaceWorkflowStartInput(
-                    property.WorkspaceId.Value,
-                    property.Id,
-                    property.OwnerUserId,
-                    property.SettlementDate,
-                    pendingConditionDueDates),
-                cancellationToken);
-        }
 
         return workspaceSummaryService.BuildCreateResponse(property, DateOnly.FromDateTime(createdAtUtc));
     }

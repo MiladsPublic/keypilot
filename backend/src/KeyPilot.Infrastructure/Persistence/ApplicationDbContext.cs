@@ -1,5 +1,6 @@
 using KeyPilot.Application.Abstractions.Persistence;
 using KeyPilot.Domain.Properties;
+using KeyPilot.Domain.Workflows;
 using Microsoft.EntityFrameworkCore;
 
 namespace KeyPilot.Infrastructure.Persistence;
@@ -10,6 +11,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<Property> Properties => Set<Property>();
     public DbSet<Condition> Conditions => Set<Condition>();
     public DbSet<WorkspaceReminder> Reminders => Set<WorkspaceReminder>();
+    public DbSet<WorkspaceWorkflowEvent> WorkflowEvents => Set<WorkspaceWorkflowEvent>();
+    public DbSet<WorkspaceWorkflowInstance> WorkflowInstances => Set<WorkspaceWorkflowInstance>();
     public DbSet<PropertyTask> Tasks => Set<PropertyTask>();
 
     public async Task AddPropertyAsync(Property property, CancellationToken cancellationToken)
@@ -77,6 +80,35 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             .Where(result => result.task.Id == id && result.property.OwnerUserId == ownerUserId)
             .Select(result => result.task)
             .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public void AddWorkflowEvent(WorkspaceWorkflowEvent workflowEvent)
+    {
+        WorkflowEvents.Add(workflowEvent);
+    }
+
+    public Task<bool> WorkflowEventExistsByDeduplicationKeyAsync(string deduplicationKey, CancellationToken cancellationToken)
+    {
+        return WorkflowEvents.AnyAsync(entity => entity.DeduplicationKey == deduplicationKey, cancellationToken);
+    }
+
+    public async Task<IReadOnlyCollection<WorkspaceWorkflowEvent>> ListPendingWorkflowEventsAsync(int take, CancellationToken cancellationToken)
+    {
+        return await WorkflowEvents
+            .Where(entity => entity.Status == WorkspaceWorkflowEventStatus.Pending)
+            .OrderBy(entity => entity.CreatedAtUtc)
+            .Take(take)
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public Task<WorkspaceWorkflowInstance?> GetWorkflowInstanceByWorkspaceIdAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        return WorkflowInstances.SingleOrDefaultAsync(entity => entity.WorkspaceId == workspaceId, cancellationToken);
+    }
+
+    public async Task AddWorkflowInstanceAsync(WorkspaceWorkflowInstance workflowInstance, CancellationToken cancellationToken)
+    {
+        await WorkflowInstances.AddAsync(workflowInstance, cancellationToken);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

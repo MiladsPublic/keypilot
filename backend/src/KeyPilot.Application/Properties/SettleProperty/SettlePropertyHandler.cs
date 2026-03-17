@@ -11,7 +11,7 @@ namespace KeyPilot.Application.Properties.SettleProperty;
 public sealed class SettlePropertyHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
-    IWorkspaceWorkflowOrchestrator workflowOrchestrator,
+    IWorkspaceWorkflowOutbox workflowOutbox,
     IWorkspaceReminderSyncService workspaceReminderSyncService,
     IWorkspaceSummaryService workspaceSummaryService)
     : IRequestHandler<SettlePropertyCommand, PropertyDto?>
@@ -28,17 +28,17 @@ public sealed class SettlePropertyHandler(
         var now = dateTimeProvider.UtcNow;
         property.MarkSettlementComplete(now);
         await workspaceReminderSyncService.SyncAsync(property, now, cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
 
         if (property.WorkspaceId.HasValue)
         {
-            await workflowOrchestrator.SignalAsync(
-                new WorkspaceWorkflowSignal(
+            await workflowOutbox.EnqueueWorkspaceSignalAsync(
                     property.WorkspaceId.Value,
-                    EventType: "workspace_settled",
-                    OccurredAtUtc: now),
+                    eventType: "workspace_settled",
+                    occurredAtUtc: now,
                 cancellationToken);
         }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return workspaceSummaryService.BuildPropertyDto(property, DateOnly.FromDateTime(now));
     }

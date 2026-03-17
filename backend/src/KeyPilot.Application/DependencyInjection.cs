@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<IWorkspaceSummaryService, WorkspaceSummaryService>();
         services.AddScoped<IWorkspaceReminderSyncService, WorkspaceReminderSyncService>();
         services.AddScoped<IWorkspaceWorkflowOrchestrator, NoopWorkspaceWorkflowOrchestrator>();
+        services.AddScoped<IWorkspaceWorkflowOutbox, WorkspaceWorkflowOutbox>();
 
         return services;
     }

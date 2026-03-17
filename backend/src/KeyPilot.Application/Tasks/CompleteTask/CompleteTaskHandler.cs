@@ -11,7 +11,7 @@ namespace KeyPilot.Application.Tasks.CompleteTask;
 public sealed class CompleteTaskHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
-    IWorkspaceWorkflowOrchestrator workflowOrchestrator,
+    IWorkspaceWorkflowOutbox workflowOutbox,
     IWorkspaceLifecycleService workspaceLifecycleService,
     IWorkspaceReminderSyncService workspaceReminderSyncService) : IRequestHandler<CompleteTaskCommand, TaskDto?>
 {
@@ -34,18 +34,17 @@ public sealed class CompleteTaskHandler(
             await workspaceReminderSyncService.SyncAsync(property, dateTimeProvider.UtcNow, cancellationToken);
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-
         if (property?.WorkspaceId is Guid workspaceId)
         {
-            await workflowOrchestrator.SignalAsync(
-                new WorkspaceWorkflowSignal(
+            await workflowOutbox.EnqueueWorkspaceSignalAsync(
                     workspaceId,
-                    EventType: "task_completed",
-                    OccurredAtUtc: dateTimeProvider.UtcNow,
-                    TaskId: task.Id),
-                cancellationToken);
+                    eventType: "task_completed",
+                    occurredAtUtc: dateTimeProvider.UtcNow,
+                    cancellationToken: cancellationToken,
+                    taskId: task.Id);
         }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return TaskDto.FromTask(task);
     }
