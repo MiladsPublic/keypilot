@@ -28,9 +28,12 @@ public sealed class TemporalWorkspaceWorkflowOrchestrator(
             .Select(date => date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddHours(9))
             .ToArray();
         var buyingMethod = ToWorkflowBuyingMethod(input.BuyingMethod);
-        var methodSpecificReminderAtUtc = input.BuyingMethod == BuyingMethod.Auction
-            ? input.AcceptedOfferDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(-1).AddHours(9)
-            : (DateTime?)null;
+        DateTime? methodSpecificReminderAtUtc = input.BuyingMethod switch
+        {
+            BuyingMethod.Auction => input.AcceptedOfferDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(-1).AddHours(9),
+            BuyingMethod.Deadline => input.SettlementDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(-1).AddHours(9),
+            _ => null
+        };
 
         try
         {

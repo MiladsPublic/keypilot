@@ -42,6 +42,7 @@ public sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
                 value => value.ToString().ToLowerInvariant(),
                 value => Enum.Parse<BuyingMethod>(value, ignoreCase: true))
             .HasMaxLength(32)
+            .HasDefaultValueSql("'private_sale'")
             .IsRequired();
 
         builder.Property(property => property.AcceptedOfferDate)
