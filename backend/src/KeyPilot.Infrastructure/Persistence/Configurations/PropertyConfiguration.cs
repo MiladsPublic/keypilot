@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using KeyPilot.Domain.Properties;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -31,16 +32,16 @@ public sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
         builder.Property(property => property.Status)
             .HasColumnName("status")
             .HasConversion(
-                value => value.ToString().ToLowerInvariant(),
-                value => Enum.Parse<PropertyStatus>(value, ignoreCase: true))
+                value => ToSnakeCase(value.ToString()),
+                value => Enum.Parse<PropertyStatus>(value.Replace("_", ""), ignoreCase: true))
             .HasMaxLength(32)
             .IsRequired();
 
         builder.Property(property => property.BuyingMethod)
             .HasColumnName("buying_method")
             .HasConversion(
-                value => value.ToString().ToLowerInvariant(),
-                value => Enum.Parse<BuyingMethod>(value, ignoreCase: true))
+                value => ToSnakeCase(value.ToString()),
+                value => Enum.Parse<BuyingMethod>(value.Replace("_", ""), ignoreCase: true))
             .HasMaxLength(32)
             .HasDefaultValueSql("'private_sale'")
             .IsRequired();
@@ -105,4 +106,7 @@ public sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
 
         builder.HasIndex(property => property.OwnerUserId);
     }
+
+    private static string ToSnakeCase(string input)
+        => Regex.Replace(input, "(?<!^)([A-Z])", "_$1").ToLowerInvariant();
 }
