@@ -16,38 +16,41 @@ public sealed class TaskTemplateServiceTests
     {
         var tasks = _sut.GetAcceptedOfferTasks(method);
 
-        tasks.Should().Contain("Review active conditions");
-        tasks.Should().Contain("Confirm lawyer details");
-        tasks.Should().Contain("Confirm settlement date");
+        tasks.Select(t => t.Title).Should().Contain("Review active conditions");
+        tasks.Select(t => t.Title).Should().Contain("Confirm lawyer details");
+        tasks.Select(t => t.Title).Should().Contain("Confirm settlement date");
     }
 
     [Fact]
     public void GetAcceptedOfferTasks_Auction_ContainsAuctionSpecificTasks()
     {
         var tasks = _sut.GetAcceptedOfferTasks(BuyingMethod.Auction);
+        var titles = tasks.Select(t => t.Title).ToList();
 
-        tasks.Should().Contain("Confirm auction registration");
-        tasks.Should().Contain("Review auction terms");
-        tasks.Should().NotContain("Review active conditions");
+        titles.Should().Contain("Confirm auction registration");
+        titles.Should().Contain("Review auction terms");
+        titles.Should().NotContain("Review active conditions");
     }
 
     [Fact]
     public void GetAcceptedOfferTasks_Tender_ContainsTenderSpecificTasks()
     {
         var tasks = _sut.GetAcceptedOfferTasks(BuyingMethod.Tender);
+        var titles = tasks.Select(t => t.Title).ToList();
 
-        tasks.Should().Contain("Prepare tender submission");
-        tasks.Should().Contain("Confirm tender deadline");
-        tasks.Should().NotContain("Review active conditions");
+        titles.Should().Contain("Prepare tender submission");
+        titles.Should().Contain("Confirm tender deadline");
+        titles.Should().NotContain("Review active conditions");
     }
 
     [Fact]
     public void GetAcceptedOfferTasks_Deadline_ContainsDeadlineSpecificTasks()
     {
         var tasks = _sut.GetAcceptedOfferTasks(BuyingMethod.Deadline);
+        var titles = tasks.Select(t => t.Title).ToList();
 
-        tasks.Should().Contain("Review deadline sale terms");
-        tasks.Should().NotContain("Review active conditions");
+        titles.Should().Contain("Review deadline sale terms");
+        titles.Should().NotContain("Review active conditions");
     }
 
     [Fact]
@@ -57,9 +60,38 @@ public sealed class TaskTemplateServiceTests
 
         foreach (var method in methods)
         {
-            var tasks = _sut.GetAcceptedOfferTasks(method);
-            tasks.Should().Contain("Confirm lawyer details", $"method {method} should include lawyer task");
-            tasks.Should().Contain("Confirm settlement date", $"method {method} should include settlement task");
+            var titles = _sut.GetAcceptedOfferTasks(method).Select(t => t.Title).ToList();
+            titles.Should().Contain("Confirm lawyer details", $"method {method} should include lawyer task");
+            titles.Should().Contain("Confirm settlement date", $"method {method} should include settlement task");
+        }
+    }
+
+    [Fact]
+    public void AllTasks_HaveDescriptions()
+    {
+        var methods = new[] { BuyingMethod.PrivateSale, BuyingMethod.Auction, BuyingMethod.Negotiation, BuyingMethod.Tender, BuyingMethod.Deadline };
+
+        foreach (var method in methods)
+        {
+            foreach (var template in _sut.GetDiscoveryTasks(method))
+            {
+                template.Description.Should().NotBeNullOrWhiteSpace($"discovery task '{template.Title}' for {method}");
+            }
+
+            foreach (var template in _sut.GetAcceptedOfferTasks(method))
+            {
+                template.Description.Should().NotBeNullOrWhiteSpace($"accepted offer task '{template.Title}' for {method}");
+            }
+        }
+
+        foreach (var template in _sut.GetPreSettlementTasks())
+        {
+            template.Description.Should().NotBeNullOrWhiteSpace($"pre-settlement task '{template.Title}'");
+        }
+
+        foreach (var template in _sut.GetSettlementTasks())
+        {
+            template.Description.Should().NotBeNullOrWhiteSpace($"settlement task '{template.Title}'");
         }
     }
 
@@ -79,10 +111,10 @@ public sealed class TaskTemplateServiceTests
             _inner = provider.GetRequiredService<ITaskTemplateService>();
         }
 
-        public IReadOnlyCollection<string> GetDiscoveryTasks(BuyingMethod buyingMethod) => _inner.GetDiscoveryTasks(buyingMethod);
-        public IReadOnlyCollection<string> GetAcceptedOfferTasks(BuyingMethod buyingMethod) => _inner.GetAcceptedOfferTasks(buyingMethod);
-        public IReadOnlyCollection<string> GetConditionTasks(ConditionType conditionType) => _inner.GetConditionTasks(conditionType);
-        public IReadOnlyCollection<string> GetPreSettlementTasks() => _inner.GetPreSettlementTasks();
-        public IReadOnlyCollection<string> GetSettlementTasks() => _inner.GetSettlementTasks();
+        public IReadOnlyCollection<TaskTemplate> GetDiscoveryTasks(BuyingMethod buyingMethod) => _inner.GetDiscoveryTasks(buyingMethod);
+        public IReadOnlyCollection<TaskTemplate> GetAcceptedOfferTasks(BuyingMethod buyingMethod) => _inner.GetAcceptedOfferTasks(buyingMethod);
+        public IReadOnlyCollection<TaskTemplate> GetConditionTasks(ConditionType conditionType) => _inner.GetConditionTasks(conditionType);
+        public IReadOnlyCollection<TaskTemplate> GetPreSettlementTasks() => _inner.GetPreSettlementTasks();
+        public IReadOnlyCollection<TaskTemplate> GetSettlementTasks() => _inner.GetSettlementTasks();
     }
 }

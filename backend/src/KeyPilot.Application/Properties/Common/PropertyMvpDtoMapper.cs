@@ -69,6 +69,8 @@ internal static class PropertyMvpDtoMapper
             }
         }
 
+        var (nextCriticalDate, nextCriticalDateLabel) = NextCriticalDeadline(property, today);
+
         return new PurchaseReadinessDto(
             mode,
             blockingConditions,
@@ -78,6 +80,41 @@ internal static class PropertyMvpDtoMapper
             overdueTasks,
             settlementTasksRemaining,
             isReadyToSettle,
-            nextAction);
+            nextAction,
+            nextCriticalDate,
+            nextCriticalDateLabel);
+    }
+
+    private static (DateOnly? Date, string? Label) NextCriticalDeadline(Property property, DateOnly today)
+    {
+        if (property.Status is PropertyStatus.Settled or PropertyStatus.Cancelled or PropertyStatus.Archived)
+        {
+            return (null, null);
+        }
+
+        var candidates = new List<(DateOnly Date, string Label)>();
+
+        foreach (var condition in property.Conditions.Where(c => c.Status == ConditionStatus.Pending))
+        {
+            candidates.Add((condition.DueDate, $"{EnumText.ConditionType(condition.Type)} condition due"));
+        }
+
+        if (property.SettlementDate.HasValue)
+        {
+            candidates.Add((property.SettlementDate.Value, "Settlement"));
+        }
+
+        if (property.BuyingMethod == BuyingMethod.Auction && property.AcceptedOfferDate.HasValue &&
+            property.Status is PropertyStatus.Discovery or PropertyStatus.OfferPreparation)
+        {
+            candidates.Add((property.AcceptedOfferDate.Value, "Auction day"));
+        }
+
+        var upcoming = candidates
+            .Where(c => c.Date >= today)
+            .OrderBy(c => c.Date)
+            .FirstOrDefault();
+
+        return upcoming == default ? (null, null) : (upcoming.Date, upcoming.Label);
     }
 }

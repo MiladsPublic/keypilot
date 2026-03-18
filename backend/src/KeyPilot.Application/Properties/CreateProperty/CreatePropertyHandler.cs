@@ -52,10 +52,10 @@ public sealed class CreatePropertyHandler(
 
         if (hasAcceptedOffer)
         {
-            foreach (var title in taskTemplateService.GetAcceptedOfferTasks(buyingMethod))
+            foreach (var template in taskTemplateService.GetAcceptedOfferTasks(buyingMethod))
             {
-                property.AddTask(title, TaskStage.Submitted, null, conditionId: null, createdAtUtc,
-                    importance: TaskImportance.Mandatory);
+                property.AddTask(template.Title, TaskStage.Submitted, null, conditionId: null, createdAtUtc,
+                    description: template.Description, importance: TaskImportance.Mandatory);
             }
 
             var selectedConditions = request.Conditions ?? [];
@@ -70,11 +70,11 @@ public sealed class CreatePropertyHandler(
 
                 var condition = property.AddCondition(conditionType, dueDate, createdAtUtc);
 
-                foreach (var title in taskTemplateService.GetConditionTasks(conditionType))
+                foreach (var condTemplate in taskTemplateService.GetConditionTasks(conditionType))
                 {
-                    var taskDueDate = dueDate.AddDays(GetConditionTaskOffset(title));
-                    property.AddTask(title, TaskStage.Conditional, taskDueDate, condition.Id, createdAtUtc,
-                        importance: TaskImportance.Mandatory);
+                    var taskDueDate = dueDate.AddDays(GetConditionTaskOffset(condTemplate.Title));
+                    property.AddTask(condTemplate.Title, TaskStage.Conditional, taskDueDate, condition.Id, createdAtUtc,
+                        description: condTemplate.Description, importance: TaskImportance.Mandatory);
                 }
             }
 
@@ -84,10 +84,10 @@ public sealed class CreatePropertyHandler(
         }
         else
         {
-            foreach (var title in taskTemplateService.GetDiscoveryTasks(buyingMethod))
+            foreach (var template in taskTemplateService.GetDiscoveryTasks(buyingMethod))
             {
-                property.AddTask(title, TaskStage.Discovery, null, conditionId: null, createdAtUtc,
-                    importance: TaskImportance.Recommended);
+                property.AddTask(template.Title, TaskStage.Discovery, null, conditionId: null, createdAtUtc,
+                    description: template.Description, importance: TaskImportance.Recommended);
             }
         }
 

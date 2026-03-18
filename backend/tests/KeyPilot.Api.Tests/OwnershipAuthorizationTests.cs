@@ -142,7 +142,9 @@ public sealed class OwnershipAuthorizationTests : IClassFixture<WebApplicationFa
                 OverdueTasks: 0,
                 SettlementTasksRemaining: 0,
                 IsReadyToSettle: false,
-                NextAction: "Satisfy finance condition"),
+                NextAction: "Satisfy finance condition",
+                NextCriticalDate: new DateOnly(2026, 3, 25),
+                NextCriticalDateLabel: "Finance condition due"),
             CreatedAtUtc: new DateTime(2026, 3, 16, 0, 0, 0, DateTimeKind.Utc));
 
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)

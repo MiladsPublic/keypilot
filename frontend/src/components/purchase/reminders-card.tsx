@@ -5,6 +5,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type WorkspaceReminder } from "@/features/properties/types/property";
 import { formatDate } from "@/components/purchase/utils";
 
+function reminderUrgency(scheduledForUtc: string): "normal" | "warning" | "danger" {
+  const scheduled = new Date(scheduledForUtc).getTime();
+  const now = Date.now();
+  const diffDays = Math.floor((scheduled - now) / (1000 * 60 * 60 * 24));
+
+  if (diffDays <= 1) return "danger";
+  if (diffDays <= 3) return "warning";
+  return "normal";
+}
+
+function urgencyBadgeVariant(urgency: "normal" | "warning" | "danger"): "secondary" | "warning" | "danger" {
+  if (urgency === "danger") return "danger";
+  if (urgency === "warning") return "warning";
+  return "secondary";
+}
+
 export function RemindersCard({ reminders }: { reminders: WorkspaceReminder[] }) {
   const pending = reminders.filter((r) => r.status === "pending");
   const sent = reminders.filter((r) => r.status === "sent");
@@ -24,12 +40,17 @@ export function RemindersCard({ reminders }: { reminders: WorkspaceReminder[] })
       <CardContent className="space-y-3">
         {pending.length > 0 ? (
           <div className="space-y-2">
-            {pending.map((reminder) => (
-              <div key={reminder.id} className="flex items-center justify-between text-sm">
-                <span>{reminder.title}</span>
-                <Badge variant="secondary">{formatDate(reminder.scheduledForUtc)}</Badge>
-              </div>
-            ))}
+            {pending.map((reminder) => {
+              const urgency = reminderUrgency(reminder.scheduledForUtc);
+              return (
+                <div key={reminder.id} className="flex items-center justify-between text-sm">
+                  <span className={urgency === "danger" ? "font-medium text-[var(--danger-fg)]" : urgency === "warning" ? "text-[var(--warning-fg)]" : ""}>
+                    {reminder.title}
+                  </span>
+                  <Badge variant={urgencyBadgeVariant(urgency)}>{formatDate(reminder.scheduledForUtc)}</Badge>
+                </div>
+              );
+            })}
           </div>
         ) : null}
         {sent.length > 0 ? (

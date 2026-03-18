@@ -9,4 +9,6 @@ public sealed record PurchaseReadinessDto(
     int OverdueTasks,
     int SettlementTasksRemaining,
     bool IsReadyToSettle,
-    string? NextAction);
+    string? NextAction,
+    DateOnly? NextCriticalDate,
+    string? NextCriticalDateLabel);

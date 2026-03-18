@@ -6,7 +6,7 @@ namespace KeyPilot.Api.Tests;
 public sealed class PropertyWorkflowDomainTests
 {
     [Fact]
-    public void RecalculateStatus_SetsUnconditionalAndDate_WhenAllConditionsClosed()
+    public void RecalculateStatus_StaysConditional_WhenAllConditionsClosed_WithoutExplicitConfirmation()
     {
         var createdAt = new DateTime(2026, 3, 16, 9, 0, 0, DateTimeKind.Utc);
         var today = DateOnly.FromDateTime(createdAt);
@@ -24,6 +24,30 @@ public sealed class PropertyWorkflowDomainTests
         condition.MarkSatisfied(createdAt.AddHours(1));
 
         property.RecalculateStatus(today);
+
+        property.Status.Should().Be(PropertyStatus.Conditional);
+        property.UnconditionalDate.Should().BeNull();
+    }
+
+    [Fact]
+    public void GoUnconditional_SetsUnconditionalStatusAndDate()
+    {
+        var createdAt = new DateTime(2026, 3, 16, 9, 0, 0, DateTimeKind.Utc);
+        var today = DateOnly.FromDateTime(createdAt);
+        var property = Property.Create(
+            "1 Test Street",
+            today,
+            today.AddDays(30),
+            1000000m,
+            100000m,
+            "user-1",
+            workspaceId: null,
+            createdAtUtc: createdAt);
+
+        var condition = property.AddCondition(ConditionType.Finance, today.AddDays(5), createdAt);
+        condition.MarkSatisfied(createdAt.AddHours(1));
+
+        property.GoUnconditional(today);
 
         property.Status.Should().Be(PropertyStatus.Unconditional);
         property.UnconditionalDate.Should().Be(today);
@@ -48,11 +72,32 @@ public sealed class PropertyWorkflowDomainTests
         var condition = property.AddCondition(ConditionType.Lim, dayOne.AddDays(3), createdAt);
         condition.MarkSatisfied(createdAt.AddHours(1));
 
-        property.RecalculateStatus(dayOne);
+        property.GoUnconditional(dayOne);
         property.RecalculateStatus(dayTwo);
 
         property.Status.Should().Be(PropertyStatus.Unconditional);
         property.UnconditionalDate.Should().Be(dayOne);
+    }
+
+    [Fact]
+    public void RecalculateStatus_TransitionsToSettlementPending_WhenUnconditionalAndSettlementWithin14Days()
+    {
+        var createdAt = new DateTime(2026, 3, 16, 9, 0, 0, DateTimeKind.Utc);
+        var today = DateOnly.FromDateTime(createdAt);
+        var property = Property.Create(
+            "7 Test Street",
+            today,
+            today.AddDays(10),
+            null,
+            null,
+            "user-1",
+            workspaceId: null,
+            createdAtUtc: createdAt);
+
+        property.GoUnconditional(today);
+        property.RecalculateStatus(today);
+
+        property.Status.Should().Be(PropertyStatus.SettlementPending);
     }
 
     [Fact]

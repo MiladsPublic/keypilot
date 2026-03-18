@@ -15,12 +15,14 @@ import { type Condition, type Property, type PropertyTask } from "@/features/pro
 import { ConditionsCard, type ConditionAction } from "@/components/purchase/conditions-card";
 import { MethodGuidanceBanner } from "@/components/purchase/method-guidance-banner";
 import { NextActionsCard } from "@/components/purchase/next-actions-card";
+import { NextCriticalDateCard } from "@/components/purchase/next-critical-date-card";
 import { ProgressCard } from "@/components/purchase/progress-card";
 import { PurchaseHeroCard } from "@/components/purchase/purchase-hero-card";
 import { SettlementCountdownCard } from "@/components/purchase/settlement-countdown-card";
 import { RemindersCard } from "@/components/purchase/reminders-card";
 import { StageTimeline } from "@/components/purchase/stage-timeline";
 import { TaskList } from "@/components/purchase/task-list";
+import { PropertyListCard } from "@/components/purchase/property-list-card";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -289,6 +291,14 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
 
   return (
     <div className="space-y-6">
+      {properties.length > 1 ? (
+        <PropertyListCard
+          properties={properties}
+          selectedPropertyId={selectedPropertyId}
+          onSelectProperty={setSelectedPropertyId}
+        />
+      ) : null}
+
       <PurchaseHeroCard
         property={selectedProperty}
         progressValue={progressValue}
@@ -366,6 +376,8 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
             settlementDate={selectedProperty.settlementDate}
             daysUntilSettlement={selectedProperty.daysUntilSettlement}
           />
+
+          <NextCriticalDateCard readinessSummary={selectedProperty.readinessSummary} />
 
           <ConditionsCard
             conditions={selectedProperty.conditions}

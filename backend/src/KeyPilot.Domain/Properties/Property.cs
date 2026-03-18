@@ -218,6 +218,21 @@ public sealed class Property : AuditableEntity
         }
     }
 
+    public void GoUnconditional(DateOnly today)
+    {
+        if (Status is not (PropertyStatus.Conditional or PropertyStatus.Unconditional))
+        {
+            return;
+        }
+
+        if (!UnconditionalDate.HasValue)
+        {
+            UnconditionalDate = today;
+        }
+
+        Status = PropertyStatus.Unconditional;
+    }
+
     public void RecalculateStatus(DateOnly today)
     {
         if (CancelledDate.HasValue)
@@ -249,25 +264,23 @@ public sealed class Property : AuditableEntity
             condition.MarkExpiredIfOverdue(today);
         }
 
-        var hasBlockingConditions = _conditions.Any(condition => condition.IsBlocking());
-
-        if (hasBlockingConditions)
+        // If already unconditional, check for settlement-pending transition
+        if (Status is PropertyStatus.Unconditional or PropertyStatus.SettlementPending)
         {
-            Status = PropertyStatus.Conditional;
-            return;
-        }
-
-        if (_conditions.Count == 0 || _conditions.All(condition => condition.IsClosed()))
-        {
-            if (!UnconditionalDate.HasValue)
+            if (SettlementDate.HasValue && SettlementDate.Value.DayNumber - today.DayNumber <= 14)
             {
-                UnconditionalDate = today;
+                Status = PropertyStatus.SettlementPending;
+            }
+            else
+            {
+                Status = PropertyStatus.Unconditional;
             }
 
-            Status = PropertyStatus.Unconditional;
             return;
         }
 
+        // Unconditional transition requires explicit GoUnconditional() call.
+        // RecalculateStatus keeps the property at Conditional.
         Status = PropertyStatus.Conditional;
     }
 

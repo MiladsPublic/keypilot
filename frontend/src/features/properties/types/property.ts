@@ -35,6 +35,8 @@ export interface PurchaseReadinessSummary {
   settlementTasksRemaining: number;
   isReadyToSettle: boolean;
   nextAction: string | null;
+  nextCriticalDate: string | null;
+  nextCriticalDateLabel: string | null;
 }
 
 export type BuyingMethod = "private_sale" | "auction" | "negotiation" | "tender" | "deadline";

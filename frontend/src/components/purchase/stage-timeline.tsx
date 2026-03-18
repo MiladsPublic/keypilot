@@ -9,8 +9,10 @@ export function StageTimeline({ currentStatus, buyingMethod }: { currentStatus: 
   const stages = getTimelineStages(buyingMethod);
   const currentStageIndex = stages.indexOf(currentStatus);
 
+  const gridClass = stages.length <= 5 ? "md:grid-cols-5" : stages.length <= 6 ? "md:grid-cols-6" : "md:grid-cols-7";
+
   return (
-    <div className={`grid gap-3 md:grid-cols-${stages.length}`}>
+    <div className={`grid gap-3 ${gridClass}`}>
       {stages.map((stage, index) => {
         const isComplete = index < currentStageIndex;
         const isCurrent = index === currentStageIndex;

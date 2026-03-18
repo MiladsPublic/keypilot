@@ -6,7 +6,7 @@ internal sealed class SettlementChecklistGenerator(ITaskTemplateService taskTemp
 {
     public void EnsureGenerated(Property property, DateTime createdAtUtc)
     {
-        if (property.Status != PropertyStatus.Unconditional)
+        if (property.Status is not (PropertyStatus.Unconditional or PropertyStatus.SettlementPending))
         {
             return;
         }
@@ -15,24 +15,24 @@ internal sealed class SettlementChecklistGenerator(ITaskTemplateService taskTemp
             .Select(task => $"{task.Stage}:{task.Title}".ToLowerInvariant())
             .ToHashSet();
 
-        foreach (var title in taskTemplateService.GetPreSettlementTasks())
+        foreach (var template in taskTemplateService.GetPreSettlementTasks())
         {
-            var key = $"{TaskStage.SettlementPending}:{title}".ToLowerInvariant();
+            var key = $"{TaskStage.SettlementPending}:{template.Title}".ToLowerInvariant();
             if (!existing.Contains(key))
             {
-                property.AddTask(title, TaskStage.SettlementPending, property.SettlementDate, conditionId: null, createdAtUtc,
-                    importance: TaskImportance.Mandatory);
+                property.AddTask(template.Title, TaskStage.SettlementPending, property.SettlementDate, conditionId: null, createdAtUtc,
+                    description: template.Description, importance: TaskImportance.Mandatory);
                 existing.Add(key);
             }
         }
 
-        foreach (var title in taskTemplateService.GetSettlementTasks())
+        foreach (var template in taskTemplateService.GetSettlementTasks())
         {
-            var key = $"{TaskStage.Settlement}:{title}".ToLowerInvariant();
+            var key = $"{TaskStage.Settlement}:{template.Title}".ToLowerInvariant();
             if (!existing.Contains(key))
             {
-                property.AddTask(title, TaskStage.Settlement, property.SettlementDate, conditionId: null, createdAtUtc,
-                    importance: TaskImportance.Mandatory);
+                property.AddTask(template.Title, TaskStage.Settlement, property.SettlementDate, conditionId: null, createdAtUtc,
+                    description: template.Description, importance: TaskImportance.Mandatory);
                 existing.Add(key);
             }
         }

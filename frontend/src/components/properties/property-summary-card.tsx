@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
-import { CalendarClock, FileText, Plus, Trash2, Users } from "lucide-react";
+import { CalendarClock, FileText, Gavel, Pencil, Plus, ShieldCheck, Trash2, Users } from "lucide-react";
 
 import { completeCondition } from "@/features/properties/api/complete-condition";
 import { completeTask } from "@/features/properties/api/complete-task";
@@ -17,6 +17,9 @@ import { addDocument, type AddDocumentBody } from "@/features/properties/api/add
 import { deleteDocument } from "@/features/properties/api/delete-document";
 import { addContact, type AddContactBody } from "@/features/properties/api/add-contact";
 import { deleteContact } from "@/features/properties/api/delete-contact";
+import { updateProperty, type UpdatePropertyBody } from "@/features/properties/api/update-property";
+import { submitOffer, type SubmitOfferBody } from "@/features/properties/api/submit-offer";
+import { goUnconditional } from "@/features/properties/api/go-unconditional";
 import { type Condition, type Property, type PropertyTask } from "@/features/properties/types/property";
 import { ConditionsCard, type ConditionAction } from "@/components/purchase/conditions-card";
 import { MethodGuidanceBanner } from "@/components/purchase/method-guidance-banner";
@@ -55,6 +58,10 @@ export function PropertySummaryCard({ property }: { property: Property }) {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [addDocDialogOpen, setAddDocDialogOpen] = useState(false);
   const [addContactDialogOpen, setAddContactDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [submitOfferDialogOpen, setSubmitOfferDialogOpen] = useState(false);
+  const [goUnconditionalDialogOpen, setGoUnconditionalDialogOpen] = useState(false);
+  const [auctionReadinessDialogOpen, setAuctionReadinessDialogOpen] = useState(false);
   const [localProperty, setLocalProperty] = useState(property);
 
   const taskMutation = useMutation({
@@ -216,6 +223,46 @@ export function PropertySummaryCard({ property }: { property: Property }) {
     }
   });
 
+  const updatePropertyMutation = useMutation({
+    mutationFn: async (body: UpdatePropertyBody) => updateProperty(localProperty.id, body, await getToken()),
+    onSuccess: (updated) => {
+      setLocalProperty(updated);
+      setEditDialogOpen(false);
+      toast({ title: "Property updated", description: updated.address, variant: "success" });
+      router.refresh();
+    },
+    onError: () => {
+      toast({ title: "Couldn't update property", variant: "danger" });
+    }
+  });
+
+  const submitOfferMutation = useMutation({
+    mutationFn: async (body: SubmitOfferBody) => submitOffer(localProperty.id, body, await getToken()),
+    onSuccess: (updated) => {
+      setLocalProperty(updated);
+      setSubmitOfferDialogOpen(false);
+      toast({ title: "Offer submitted", description: "Your workspace is now in conditional stage.", variant: "success" });
+      router.refresh();
+    },
+    onError: () => {
+      toast({ title: "Couldn't submit offer", variant: "danger" });
+    }
+  });
+
+  const goUnconditionalMutation = useMutation({
+    mutationFn: async () => goUnconditional(localProperty.id, await getToken()),
+    onSuccess: (updated) => {
+      setLocalProperty(updated);
+      setGoUnconditionalDialogOpen(false);
+      toast({ title: "Gone unconditional", description: `${updated.address} is now unconditional.`, variant: "success" });
+      router.refresh();
+    },
+    onError: () => {
+      toast({ title: "Couldn't go unconditional", variant: "danger" });
+      router.refresh();
+    }
+  });
+
   const allTasks = useMemo(() => [...localProperty.tasks], [localProperty.tasks]);
   const taskGroups = groupedTasks(allTasks);
 
@@ -298,6 +345,192 @@ export function PropertySummaryCard({ property }: { property: Property }) {
               Archive
             </Button>
           ) : null}
+
+          {localProperty.status !== "settled" && localProperty.status !== "cancelled" && localProperty.status !== "archived" ? (
+            <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="rounded-full" variant="outline">
+                  <Pencil className="mr-1 h-4 w-4" /> Edit details
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit property details</DialogTitle>
+                  <DialogDescription>Update the details for this purchase.</DialogDescription>
+                </DialogHeader>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const data = new FormData(e.currentTarget);
+                    const body: UpdatePropertyBody = {};
+                    const address = (data.get("address") as string)?.trim();
+                    if (address && address !== localProperty.address) body.address = address;
+                    const settlement = data.get("settlementDate") as string;
+                    if (settlement && settlement !== localProperty.settlementDate) body.settlementDate = settlement;
+                    const price = data.get("purchasePrice") as string;
+                    if (price) body.purchasePrice = Number(price);
+                    const deposit = data.get("depositAmount") as string;
+                    if (deposit) body.depositAmount = Number(deposit);
+                    const methodRef = (data.get("methodReference") as string)?.trim();
+                    if (methodRef !== (localProperty.methodReference ?? "")) body.methodReference = methodRef || null;
+                    if (Object.keys(body).length > 0) updatePropertyMutation.mutate(body);
+                    else setEditDialogOpen(false);
+                  }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label htmlFor="edit-address" className="mb-1 block text-sm font-medium">Address</label>
+                    <Input id="edit-address" name="address" defaultValue={localProperty.address} />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-settlement" className="mb-1 block text-sm font-medium">Settlement date</label>
+                    <Input id="edit-settlement" name="settlementDate" type="date" defaultValue={localProperty.settlementDate ?? ""} />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-price" className="mb-1 block text-sm font-medium">Purchase price</label>
+                    <Input id="edit-price" name="purchasePrice" type="number" step="0.01" defaultValue={localProperty.purchasePrice ?? ""} />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-deposit" className="mb-1 block text-sm font-medium">Deposit amount</label>
+                    <Input id="edit-deposit" name="depositAmount" type="number" step="0.01" defaultValue={localProperty.depositAmount ?? ""} />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-methodRef" className="mb-1 block text-sm font-medium">Method reference</label>
+                    <Input id="edit-methodRef" name="methodReference" defaultValue={localProperty.methodReference ?? ""} placeholder="e.g. auction lot number" />
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" className="rounded-lg" type="button" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+                    <Button type="submit" className="rounded-full" disabled={updatePropertyMutation.isPending}>Save changes</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          ) : null}
+
+          {localProperty.status === "discovery" ? (
+            <Dialog open={submitOfferDialogOpen} onOpenChange={setSubmitOfferDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="rounded-full">Submit offer</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Submit an offer</DialogTitle>
+                  <DialogDescription>Provide the accepted offer details to move into the conditional stage.</DialogDescription>
+                </DialogHeader>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const data = new FormData(e.currentTarget);
+                    const offsets: Record<string, number> = { finance: 5, building_report: 5, lim: 10, insurance: 10, solicitor_approval: 5 };
+                    const conditions = ["finance", "building_report", "lim", "insurance", "solicitor_approval"]
+                      .filter((type) => data.get(`cond-${type}`) === "on")
+                      .map((type) => ({ type, daysFromAcceptedOffer: offsets[type] ?? 5 }));
+                    submitOfferMutation.mutate({
+                      acceptedOfferDate: data.get("acceptedOfferDate") as string,
+                      settlementDate: data.get("settlementDate") as string,
+                      conditions: conditions.length > 0 ? conditions : undefined
+                    });
+                  }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label htmlFor="offer-accepted" className="mb-1 block text-sm font-medium">Offer accepted date</label>
+                    <Input id="offer-accepted" name="acceptedOfferDate" type="date" required />
+                  </div>
+                  <div>
+                    <label htmlFor="offer-settlement" className="mb-1 block text-sm font-medium">Settlement date</label>
+                    <Input id="offer-settlement" name="settlementDate" type="date" required />
+                  </div>
+                  <fieldset className="space-y-2">
+                    <legend className="text-sm font-medium">Conditions</legend>
+                    {[
+                      { value: "finance", label: "Finance" },
+                      { value: "building_report", label: "Building report" },
+                      { value: "lim", label: "LIM" },
+                      { value: "insurance", label: "Insurance" },
+                      { value: "solicitor_approval", label: "Solicitor approval" }
+                    ].map((cond) => (
+                      <label key={cond.value} className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" name={`cond-${cond.value}`} defaultChecked={cond.value === "finance" || cond.value === "building_report"} />
+                        {cond.label}
+                      </label>
+                    ))}
+                  </fieldset>
+                  <DialogFooter>
+                    <Button variant="outline" className="rounded-lg" type="button" onClick={() => setSubmitOfferDialogOpen(false)}>Cancel</Button>
+                    <Button type="submit" className="rounded-full" disabled={submitOfferMutation.isPending}>Submit offer</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          ) : null}
+
+          {localProperty.status === "conditional" ? (
+            <Dialog open={goUnconditionalDialogOpen} onOpenChange={setGoUnconditionalDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="rounded-full" variant="outline">
+                  <ShieldCheck className="mr-1 h-4 w-4" /> Go unconditional
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Go unconditional?</DialogTitle>
+                  <DialogDescription>
+                    This confirms that all conditions are satisfied and you are committing to the purchase. Once unconditional, the purchase cannot be reversed without legal consequences.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="outline" className="rounded-lg" onClick={() => setGoUnconditionalDialogOpen(false)}>Cancel</Button>
+                  <Button
+                    className="rounded-full"
+                    disabled={goUnconditionalMutation.isPending}
+                    onClick={() => goUnconditionalMutation.mutate()}
+                  >
+                    Confirm unconditional
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          ) : null}
+
+          {localProperty.buyingMethod === "auction" && (localProperty.status === "discovery" || localProperty.status === "offer_preparation") ? (() => {
+            const incompleteTasks = localProperty.tasks.filter((t) => t.status === "pending");
+            const isReady = incompleteTasks.length === 0;
+            return (
+              <Dialog open={auctionReadinessDialogOpen} onOpenChange={setAuctionReadinessDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="rounded-full">
+                    <Gavel className="mr-1 h-4 w-4" /> Auction readiness check
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Are you ready to bid?</DialogTitle>
+                    <DialogDescription>
+                      Auction purchases are unconditional — once the hammer falls, you are legally committed. Review your preparation status below.
+                    </DialogDescription>
+                  </DialogHeader>
+                  {isReady ? (
+                    <p className="text-sm font-medium text-[var(--success-fg)]">All preparation tasks are complete. You are ready to bid.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-[var(--danger-fg)]">{incompleteTasks.length} task{incompleteTasks.length !== 1 ? "s" : ""} still incomplete:</p>
+                      <ul className="space-y-1">
+                        {incompleteTasks.slice(0, 8).map((task) => (
+                          <li key={task.id} className="text-sm text-ink/75">• {task.title}</li>
+                        ))}
+                        {incompleteTasks.length > 8 ? <li className="text-sm text-ink/55">… and {incompleteTasks.length - 8} more</li> : null}
+                      </ul>
+                    </div>
+                  )}
+                  <DialogFooter>
+                    <Button variant="outline" className="rounded-lg" onClick={() => setAuctionReadinessDialogOpen(false)}>Close</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            );
+          })() : null}
+
           <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
             <DialogTrigger asChild>
               <Button className="rounded-full" variant="outline" disabled={localProperty.status === "settled" || localProperty.status === "cancelled" || localProperty.status === "archived"}>

@@ -29,6 +29,9 @@ export function TaskItem({ task, disabled, onToggle }: TaskItemProps) {
         />
         <div className="min-w-0 flex-1">
           <p className={cn("text-sm font-medium", task.status === "completed" && "line-through opacity-65")}>{task.title}</p>
+          {task.description ? (
+            <p className={cn("mt-0.5 text-xs text-ink/55", task.status === "completed" && "line-through opacity-65")}>{task.description}</p>
+          ) : null}
           <p
             className={cn(
               "mt-1 inline-flex items-center gap-1 text-sm text-ink/65",

@@ -1,4 +1,5 @@
 using KeyPilot.Application.Abstractions.Persistence;
+using KeyPilot.Application.Properties.Common;
 using KeyPilot.Domain.Properties;
 
 namespace KeyPilot.Application.Properties.Reminders;
@@ -50,10 +51,15 @@ internal sealed class WorkspaceReminderSyncService(IApplicationDbContext dbConte
 
         foreach (var condition in workspace.Conditions.Where(condition => condition.Status == ConditionStatus.Pending))
         {
-            yield return (
-                $"condition:{condition.Id}:due",
-                $"Condition due: {condition.Type}",
-                ToUtcAtNineAm(condition.DueDate, nowUtc));
+            var label = EnumText.ConditionType(condition.Type);
+
+            foreach (var (suffix, daysBefore, titlePrefix) in EscalationOffsets)
+            {
+                yield return (
+                    $"condition:{condition.Id}:{suffix}",
+                    $"{titlePrefix}{label} condition",
+                    ToUtcAtNineAm(condition.DueDate.AddDays(-daysBefore), nowUtc));
+            }
         }
 
         if (workspace.BuyingMethod == BuyingMethod.Auction && workspace.AcceptedOfferDate.HasValue)
@@ -74,12 +80,23 @@ internal sealed class WorkspaceReminderSyncService(IApplicationDbContext dbConte
 
         if (workspace.SettlementDate.HasValue)
         {
-            yield return (
-                "settlement:due",
-                "Settlement date reminder",
-                ToUtcAtNineAm(workspace.SettlementDate.Value, nowUtc));
+            foreach (var (suffix, daysBefore, titlePrefix) in EscalationOffsets)
+            {
+                yield return (
+                    $"settlement:{suffix}",
+                    $"{titlePrefix}settlement",
+                    ToUtcAtNineAm(workspace.SettlementDate.Value.AddDays(-daysBefore), nowUtc));
+            }
         }
     }
+
+    private static readonly (string Suffix, int DaysBefore, string TitlePrefix)[] EscalationOffsets =
+    [
+        ("7d", 7, "7 days until "),
+        ("3d", 3, "3 days until "),
+        ("1d", 1, "Tomorrow: "),
+        ("due", 0, "Due today: ")
+    ];
 
     private static DateTime ToUtcAtNineAm(DateOnly date, DateTime nowUtc)
     {

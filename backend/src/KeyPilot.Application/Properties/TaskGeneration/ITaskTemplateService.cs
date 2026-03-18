@@ -2,15 +2,17 @@ using KeyPilot.Domain.Properties;
 
 namespace KeyPilot.Application.Properties.TaskGeneration;
 
+public record TaskTemplate(string Title, string Description);
+
 public interface ITaskTemplateService
 {
-    IReadOnlyCollection<string> GetDiscoveryTasks(BuyingMethod buyingMethod);
+    IReadOnlyCollection<TaskTemplate> GetDiscoveryTasks(BuyingMethod buyingMethod);
 
-    IReadOnlyCollection<string> GetAcceptedOfferTasks(BuyingMethod buyingMethod);
+    IReadOnlyCollection<TaskTemplate> GetAcceptedOfferTasks(BuyingMethod buyingMethod);
 
-    IReadOnlyCollection<string> GetConditionTasks(ConditionType conditionType);
+    IReadOnlyCollection<TaskTemplate> GetConditionTasks(ConditionType conditionType);
 
-    IReadOnlyCollection<string> GetPreSettlementTasks();
+    IReadOnlyCollection<TaskTemplate> GetPreSettlementTasks();
 
-    IReadOnlyCollection<string> GetSettlementTasks();
+    IReadOnlyCollection<TaskTemplate> GetSettlementTasks();
 }
