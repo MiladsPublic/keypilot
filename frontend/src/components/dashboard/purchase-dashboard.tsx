@@ -12,6 +12,7 @@ import { failCondition } from "@/features/properties/api/fail-condition";
 import { cancelProperty } from "@/features/properties/api/cancel-property";
 import { type Condition, type Property, type PropertyTask } from "@/features/properties/types/property";
 import { ConditionsCard, type ConditionAction } from "@/components/purchase/conditions-card";
+import { MethodGuidanceBanner } from "@/components/purchase/method-guidance-banner";
 import { NextActionsCard } from "@/components/purchase/next-actions-card";
 import { ProgressCard } from "@/components/purchase/progress-card";
 import { PurchaseHeroCard } from "@/components/purchase/purchase-hero-card";
@@ -272,7 +273,9 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
         onSelectProperty={setSelectedPropertyId}
       />
 
-      <StageTimeline currentStatus={selectedProperty.status} />
+      <StageTimeline currentStatus={selectedProperty.status} buyingMethod={selectedProperty.buyingMethod} />
+
+      <MethodGuidanceBanner property={selectedProperty} />
 
       <div className="flex justify-end">
         <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
@@ -346,7 +349,7 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
         </div>
 
         <div className="order-3 lg:col-span-2">
-          <TaskList groupedTasks={taskGroups} disabled={completeTaskMutation.isPending} onToggleTask={markTaskComplete} />
+          <TaskList groupedTasks={taskGroups} buyingMethod={selectedProperty.buyingMethod} disabled={completeTaskMutation.isPending} onToggleTask={markTaskComplete} />
         </div>
       </div>
     </div>

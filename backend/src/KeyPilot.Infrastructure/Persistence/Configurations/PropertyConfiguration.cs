@@ -45,6 +45,10 @@ public sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
             .HasDefaultValueSql("'private_sale'")
             .IsRequired();
 
+        builder.Property(property => property.MethodReference)
+            .HasColumnName("method_reference")
+            .HasMaxLength(100);
+
         builder.Property(property => property.AcceptedOfferDate)
             .HasColumnName("accepted_offer_date")
             .IsRequired();

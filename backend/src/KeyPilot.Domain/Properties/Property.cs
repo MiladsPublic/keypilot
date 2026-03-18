@@ -23,6 +23,7 @@ public sealed class Property : AuditableEntity
         BuyingMethod buyingMethod,
         string ownerUserId,
         Guid? workspaceId,
+        string? methodReference,
         DateTime createdAtUtc)
     {
         Address = address;
@@ -33,6 +34,7 @@ public sealed class Property : AuditableEntity
         BuyingMethod = buyingMethod;
         OwnerUserId = ownerUserId;
         WorkspaceId = workspaceId;
+        MethodReference = methodReference;
         Status = PropertyStatus.Conditional;
         CreatedAtUtc = createdAtUtc;
     }
@@ -61,6 +63,8 @@ public sealed class Property : AuditableEntity
 
     public DateOnly? CancelledDate { get; private set; }
 
+    public string? MethodReference { get; private set; }
+
     public IReadOnlyCollection<Condition> Conditions => _conditions;
 
     public IReadOnlyCollection<WorkspaceReminder> Reminders => _reminders;
@@ -80,7 +84,8 @@ public sealed class Property : AuditableEntity
         string ownerUserId,
         Guid? workspaceId,
         DateTime createdAtUtc,
-        BuyingMethod buyingMethod = BuyingMethod.PrivateSale)
+        BuyingMethod buyingMethod = BuyingMethod.PrivateSale,
+        string? methodReference = null)
     {
         return new Property(
             address,
@@ -91,6 +96,7 @@ public sealed class Property : AuditableEntity
             buyingMethod,
             ownerUserId,
             workspaceId,
+            methodReference,
             createdAtUtc);
     }
 

@@ -18,6 +18,7 @@ import { addContact, type AddContactBody } from "@/features/properties/api/add-c
 import { deleteContact } from "@/features/properties/api/delete-contact";
 import { type Condition, type Property, type PropertyTask } from "@/features/properties/types/property";
 import { ConditionsCard, type ConditionAction } from "@/components/purchase/conditions-card";
+import { MethodGuidanceBanner } from "@/components/purchase/method-guidance-banner";
 import { ProgressCard } from "@/components/purchase/progress-card";
 import { PurchaseHeroCard } from "@/components/purchase/purchase-hero-card";
 import { StageTimeline } from "@/components/purchase/stage-timeline";
@@ -261,7 +262,9 @@ export function PropertySummaryCard({ property }: { property: Property }) {
     <div className="space-y-6">
       <PurchaseHeroCard property={localProperty} progressValue={progressValue} />
 
-      <StageTimeline currentStatus={localProperty.status} />
+      <StageTimeline currentStatus={localProperty.status} buyingMethod={localProperty.buyingMethod} />
+
+      <MethodGuidanceBanner property={localProperty} />
 
       <div className="flex justify-end">
         <div className="flex flex-wrap justify-end gap-2">
@@ -330,7 +333,7 @@ export function PropertySummaryCard({ property }: { property: Property }) {
 
         <TabsContent value="overview" className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <TaskList groupedTasks={taskGroups} disabled={taskMutation.isPending} onToggleTask={markTaskComplete} />
+            <TaskList groupedTasks={taskGroups} buyingMethod={localProperty.buyingMethod} disabled={taskMutation.isPending} onToggleTask={markTaskComplete} />
           </div>
           <div>
             <ProgressCard
@@ -344,7 +347,7 @@ export function PropertySummaryCard({ property }: { property: Property }) {
         </TabsContent>
 
         <TabsContent value="tasks">
-          <TaskList groupedTasks={taskGroups} disabled={taskMutation.isPending} onToggleTask={markTaskComplete} />
+          <TaskList groupedTasks={taskGroups} buyingMethod={localProperty.buyingMethod} disabled={taskMutation.isPending} onToggleTask={markTaskComplete} />
         </TabsContent>
 
         <TabsContent value="conditions">

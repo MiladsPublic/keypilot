@@ -4,7 +4,7 @@ import { startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
-import { Home, LoaderCircle } from "lucide-react";
+import { Home, Info, LoaderCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -35,8 +35,10 @@ export function CreatePropertyForm() {
     staleTime: 5 * 60 * 1000
   });
 
-  const conditionOptions = configQuery.data?.conditionDefaults ?? [];
+  const allConditionOptions = configQuery.data?.conditionDefaults ?? [];
+  const conditionsByMethod = configQuery.data?.conditionsByMethod ?? {};
   const buyingMethodOptions = configQuery.data?.buyingMethods ?? [];
+  const methodProfiles = configQuery.data?.methodProfiles ?? {};
 
   const {
     register,
@@ -54,6 +56,7 @@ export function CreatePropertyForm() {
       settlementDate: "",
       purchasePrice: "",
       depositAmount: "",
+      methodReference: "",
       conditions: {
         finance: true,
         building_report: false,
@@ -82,8 +85,10 @@ export function CreatePropertyForm() {
   const mutation = useMutation({
     mutationFn: async (values: CreatePropertyFormValues) => {
       const token = await getToken();
+      const methodConditions = configQuery.data?.conditionsByMethod?.[values.buyingMethod]
+        ?? configQuery.data?.conditionDefaults ?? [];
       const offsets = Object.fromEntries(
-        (configQuery.data?.conditionDefaults ?? []).map((c) => [c.type, c.daysFromAcceptedOffer])
+        methodConditions.map((c) => [c.type, c.daysFromAcceptedOffer])
       );
       return createProperty(values, offsets, token);
     },
@@ -122,6 +127,38 @@ export function CreatePropertyForm() {
 
   const conditionsState = watch("conditions");
   const selectedBuyingMethod = watch("buyingMethod");
+
+  const activeProfile = methodProfiles[selectedBuyingMethod];
+  const conditionOptions = conditionsByMethod[selectedBuyingMethod] ?? allConditionOptions;
+  const allowedConditionTypes = new Set(conditionOptions.map((c) => c.type));
+  const hasConditions = conditionOptions.length > 0;
+
+  const dateLabel = selectedBuyingMethod === "auction" ? "Auction date"
+    : selectedBuyingMethod === "tender" ? "Tender accepted date"
+    : selectedBuyingMethod === "deadline" ? "Deadline accepted date"
+    : "Offer accepted date";
+
+  const referenceLabel = selectedBuyingMethod === "auction" ? "Paddle / registration number"
+    : selectedBuyingMethod === "tender" ? "Tender reference"
+    : selectedBuyingMethod === "deadline" ? "Reference number"
+    : null;
+
+  useEffect(() => {
+    const currentConditions = conditionsState ?? {};
+    let changed = false;
+    const next = { ...currentConditions };
+
+    for (const key of Object.keys(next) as Array<keyof typeof next>) {
+      if (next[key] && !allowedConditionTypes.has(key)) {
+        next[key] = false;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      setValue("conditions", next);
+    }
+  }, [selectedBuyingMethod]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Card>
@@ -183,13 +220,22 @@ export function CreatePropertyForm() {
               ))}
             </div>
             {errors.buyingMethod ? <p className="text-sm text-red-700">{errors.buyingMethod.message}</p> : null}
+            {activeProfile ? (
+              <div className="flex items-start gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+                <Info className="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  <p>{activeProfile.description}</p>
+                  <p className="mt-1 text-sky-700">Typical timeline: ~{activeProfile.typicalSettlementDays} working days to settlement.</p>
+                </div>
+              </div>
+            ) : null}
           </section>
 
           <section className="space-y-4">
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-ink/65">Timeline</p>
           <div className="grid gap-5 md:grid-cols-2">
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-ink/80">Offer accepted date</span>
+              <span className="text-sm font-medium text-ink/80">{dateLabel}</span>
               <Input type="date" {...register("acceptedOfferDate")} />
               {errors.acceptedOfferDate ? (
                 <p className="text-sm text-red-700">{errors.acceptedOfferDate.message}</p>
@@ -204,8 +250,15 @@ export function CreatePropertyForm() {
               ) : null}
             </label>
           </div>
+          {referenceLabel ? (
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-ink/80">{referenceLabel} (optional)</span>
+              <Input placeholder={referenceLabel} {...register("methodReference")} />
+            </label>
+          ) : null}
           </section>
 
+          {hasConditions ? (
           <section className="space-y-4">
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-ink/65">Conditions</p>
             <div className="flex flex-wrap gap-2">
@@ -228,6 +281,7 @@ export function CreatePropertyForm() {
               })}
             </div>
           </section>
+          ) : null}
 
           {mutation.isError ? (
             <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">

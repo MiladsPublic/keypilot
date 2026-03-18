@@ -113,6 +113,7 @@ public sealed class OwnershipAuthorizationTests : IClassFixture<WebApplicationFa
             WorkspaceId: null,
             Address: "42 Ownership Lane",
             BuyingMethod: "private_sale",
+            MethodReference: null,
             WorkspaceStage: "conditional",
             Status: "conditional",
             AcceptedOfferDate: new DateOnly(2026, 3, 16),

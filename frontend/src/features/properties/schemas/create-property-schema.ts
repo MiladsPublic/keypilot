@@ -13,6 +13,7 @@ export const createPropertySchema = z
     settlementDate: requiredDate,
     purchasePrice: optionalMoney.optional(),
     depositAmount: optionalMoney.optional(),
+    methodReference: z.string().max(100).optional(),
     conditions: z.object({
       finance: z.boolean(),
       building_report: z.boolean(),

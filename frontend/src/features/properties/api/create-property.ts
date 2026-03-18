@@ -9,6 +9,7 @@ type CreatePropertyRequest = {
   settlementDate: string;
   purchasePrice: number | null;
   depositAmount: number | null;
+  methodReference: string | null;
   conditions: Array<{
     type: string;
     daysFromAcceptedOffer: number;
@@ -43,6 +44,7 @@ export async function createProperty(
     settlementDate: values.settlementDate,
     purchasePrice: values.purchasePrice ? Number(values.purchasePrice) : null,
     depositAmount: values.depositAmount ? Number(values.depositAmount) : null,
+    methodReference: values.methodReference?.trim() || null,
     conditions
   }, token);
 }

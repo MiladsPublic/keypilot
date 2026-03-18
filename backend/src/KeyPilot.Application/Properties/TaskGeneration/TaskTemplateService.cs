@@ -11,6 +11,29 @@ internal sealed class TaskTemplateService : ITaskTemplateService
         "Confirm settlement date"
     ];
 
+    private static readonly IReadOnlyCollection<string> AuctionAcceptedOfferTasks =
+    [
+        "Confirm lawyer details",
+        "Confirm auction registration",
+        "Review auction terms",
+        "Confirm settlement date"
+    ];
+
+    private static readonly IReadOnlyCollection<string> TenderAcceptedOfferTasks =
+    [
+        "Confirm lawyer details",
+        "Prepare tender submission",
+        "Confirm tender deadline",
+        "Confirm settlement date"
+    ];
+
+    private static readonly IReadOnlyCollection<string> DeadlineAcceptedOfferTasks =
+    [
+        "Confirm lawyer details",
+        "Review deadline sale terms",
+        "Confirm settlement date"
+    ];
+
     private static readonly IReadOnlyCollection<string> PreSettlementTasks =
     [
         "Confirm final loan approval",
@@ -27,7 +50,16 @@ internal sealed class TaskTemplateService : ITaskTemplateService
         "Keys collected"
     ];
 
-    public IReadOnlyCollection<string> GetAcceptedOfferTasks() => AcceptedOfferTasks;
+    public IReadOnlyCollection<string> GetAcceptedOfferTasks(BuyingMethod buyingMethod)
+    {
+        return buyingMethod switch
+        {
+            BuyingMethod.Auction => AuctionAcceptedOfferTasks,
+            BuyingMethod.Tender => TenderAcceptedOfferTasks,
+            BuyingMethod.Deadline => DeadlineAcceptedOfferTasks,
+            _ => AcceptedOfferTasks
+        };
+    }
 
     public IReadOnlyCollection<string> GetConditionTasks(ConditionType conditionType)
     {

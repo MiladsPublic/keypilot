@@ -11,9 +11,18 @@ export interface BuyingMethodOption {
   label: string;
 }
 
+export interface MethodProfile {
+  description: string;
+  stages: string[];
+  stageLabels: Record<string, string>;
+  typicalSettlementDays: number;
+}
+
 export interface WorkspaceConfig {
   conditionDefaults: ConditionDefault[];
   buyingMethods: BuyingMethodOption[];
+  conditionsByMethod: Record<string, ConditionDefault[]>;
+  methodProfiles: Record<string, MethodProfile>;
 }
 
 export async function getWorkspaceConfig(): Promise<WorkspaceConfig> {

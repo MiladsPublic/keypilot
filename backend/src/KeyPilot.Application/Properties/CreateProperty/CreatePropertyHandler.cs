@@ -43,9 +43,10 @@ public sealed class CreatePropertyHandler(
             request.OwnerUserId,
             workspaceId: Guid.NewGuid(),
             createdAtUtc: createdAtUtc,
-            buyingMethod: buyingMethod);
+            buyingMethod: buyingMethod,
+            methodReference: request.MethodReference?.Trim());
 
-        foreach (var title in taskTemplateService.GetAcceptedOfferTasks())
+        foreach (var title in taskTemplateService.GetAcceptedOfferTasks(buyingMethod))
         {
             property.AddTask(title, TaskStage.AcceptedOffer, null, conditionId: null, createdAtUtc);
         }

@@ -60,6 +60,7 @@ export interface Property {
   workspaceId: string | null;
   address: string;
   buyingMethod: BuyingMethod;
+  methodReference: string | null;
   status: "accepted_offer" | "conditional" | "unconditional" | "pre_settlement" | "settled" | "cancelled";
   acceptedOfferDate: string;
   unconditionalDate: string | null;

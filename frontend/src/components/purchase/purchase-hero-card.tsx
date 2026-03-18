@@ -59,8 +59,9 @@ export function PurchaseHeroCard({ property, progressValue, canSelect, propertie
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant={badgeVariantForStatus(property.status)}>{formatStage(property.status)}</Badge>
+          <Badge variant={badgeVariantForStatus(property.status)}>{formatStage(property.status, property.buyingMethod)}</Badge>
           <Badge variant="secondary">{formatBuyingMethod(property.buyingMethod)}</Badge>
+          {property.methodReference ? <Badge variant="secondary">{property.methodReference}</Badge> : null}
         </div>
 
         <div className="space-y-2">

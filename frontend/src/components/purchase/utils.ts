@@ -1,4 +1,4 @@
-import { type Property } from "@/features/properties/types/property";
+import { type BuyingMethod, type Property } from "@/features/properties/types/property";
 
 export function formatBuyingMethod(value: string) {
   return value
@@ -15,13 +15,53 @@ export const timelineStages = [
   "cancelled"
 ] as const;
 
-export function formatStage(value: string) {
+const auctionTimelineStages = [
+  "accepted_offer",
+  "unconditional",
+  "settled",
+  "cancelled"
+] as const;
+
+export function getTimelineStages(buyingMethod?: BuyingMethod): readonly string[] {
+  if (buyingMethod === "auction") {
+    return auctionTimelineStages;
+  }
+
+  return timelineStages;
+}
+
+const methodStageLabels: Partial<Record<BuyingMethod, Record<string, string>>> = {
+  auction: {
+    accepted_offer: "Auction Won",
+    unconditional: "Unconditional",
+    pre_settlement: "Pre-Settlement",
+    settled: "Settled",
+    cancelled: "Cancelled",
+  },
+  tender: {
+    accepted_offer: "Tender Accepted",
+  },
+  deadline: {
+    accepted_offer: "Deadline Accepted",
+  },
+};
+
+function defaultStageLabel(value: string): string {
   const normalized = value === "settlement" ? "settled" : value;
 
   return normalized
     .split("_")
     .map((part) => part[0].toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+export function formatStage(value: string, buyingMethod?: BuyingMethod): string {
+  if (buyingMethod) {
+    const label = methodStageLabels[buyingMethod]?.[value];
+    if (label) return label;
+  }
+
+  return defaultStageLabel(value);
 }
 
 export function formatDate(value: string | null) {

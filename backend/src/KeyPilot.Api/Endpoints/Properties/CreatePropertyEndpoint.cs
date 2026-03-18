@@ -16,6 +16,7 @@ public static class CreatePropertyEndpoint
         string? BuyingMethod,
         decimal? PurchasePrice,
         decimal? DepositAmount,
+        string? MethodReference,
         IReadOnlyCollection<CreatePropertyConditionInput>? Conditions);
 
     public static void Map(RouteGroupBuilder group)
@@ -49,6 +50,7 @@ public static class CreatePropertyEndpoint
             request.BuyingMethod ?? "private_sale",
             request.PurchasePrice,
             request.DepositAmount,
+            request.MethodReference,
             request.Conditions,
             ownerUserId);
 
