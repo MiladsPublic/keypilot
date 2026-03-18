@@ -8,11 +8,14 @@ internal static class EnumText
     {
         return status switch
         {
-            Domain.Properties.PropertyStatus.AcceptedOffer => "accepted_offer",
+            Domain.Properties.PropertyStatus.Discovery => "discovery",
+            Domain.Properties.PropertyStatus.OfferPreparation => "offer_preparation",
+            Domain.Properties.PropertyStatus.Submitted => "submitted",
             Domain.Properties.PropertyStatus.Conditional => "conditional",
             Domain.Properties.PropertyStatus.Unconditional => "unconditional",
-            Domain.Properties.PropertyStatus.PreSettlement => "pre_settlement",
+            Domain.Properties.PropertyStatus.SettlementPending => "settlement_pending",
             Domain.Properties.PropertyStatus.Settled => "settled",
+            Domain.Properties.PropertyStatus.Archived => "archived",
             Domain.Properties.PropertyStatus.Cancelled => "cancelled",
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
@@ -53,10 +56,12 @@ internal static class EnumText
     {
         return stage switch
         {
-            Domain.Properties.TaskStage.AcceptedOffer => "accepted_offer",
+            Domain.Properties.TaskStage.Discovery => "discovery",
+            Domain.Properties.TaskStage.OfferPreparation => "offer_preparation",
+            Domain.Properties.TaskStage.Submitted => "submitted",
             Domain.Properties.TaskStage.Conditional => "conditional",
             Domain.Properties.TaskStage.Unconditional => "unconditional",
-            Domain.Properties.TaskStage.PreSettlement => "pre_settlement",
+            Domain.Properties.TaskStage.SettlementPending => "settlement_pending",
             Domain.Properties.TaskStage.Settlement => "settlement",
             _ => throw new ArgumentOutOfRangeException(nameof(stage), stage, null)
         };
@@ -68,7 +73,19 @@ internal static class EnumText
         {
             Domain.Properties.TaskStatus.Pending => "pending",
             Domain.Properties.TaskStatus.Completed => "completed",
+            Domain.Properties.TaskStatus.NeedsAttention => "needs_attention",
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
+        };
+    }
+
+    public static string TaskImportance(TaskImportance importance)
+    {
+        return importance switch
+        {
+            Domain.Properties.TaskImportance.Mandatory => "mandatory",
+            Domain.Properties.TaskImportance.Recommended => "recommended",
+            Domain.Properties.TaskImportance.Informational => "informational",
+            _ => throw new ArgumentOutOfRangeException(nameof(importance), importance, null)
         };
     }
 

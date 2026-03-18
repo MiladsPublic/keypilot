@@ -5,8 +5,8 @@ import { type Property } from "@/features/properties/types/property";
 type CreatePropertyRequest = {
   address: string;
   buyingMethod: string;
-  acceptedOfferDate: string;
-  settlementDate: string;
+  acceptedOfferDate: string | null;
+  settlementDate: string | null;
   purchasePrice: number | null;
   depositAmount: number | null;
   methodReference: string | null;
@@ -40,8 +40,8 @@ export async function createProperty(
   return apiClient.post<Property, CreatePropertyRequest>("/api/v1/properties", {
     address: values.address.trim(),
     buyingMethod: values.buyingMethod,
-    acceptedOfferDate: values.acceptedOfferDate,
-    settlementDate: values.settlementDate,
+    acceptedOfferDate: values.acceptedOfferDate || null,
+    settlementDate: values.settlementDate || null,
     purchasePrice: values.purchasePrice ? Number(values.purchasePrice) : null,
     depositAmount: values.depositAmount ? Number(values.depositAmount) : null,
     methodReference: values.methodReference?.trim() || null,

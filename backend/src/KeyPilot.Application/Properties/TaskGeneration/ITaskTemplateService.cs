@@ -4,6 +4,8 @@ namespace KeyPilot.Application.Properties.TaskGeneration;
 
 public interface ITaskTemplateService
 {
+    IReadOnlyCollection<string> GetDiscoveryTasks(BuyingMethod buyingMethod);
+
     IReadOnlyCollection<string> GetAcceptedOfferTasks(BuyingMethod buyingMethod);
 
     IReadOnlyCollection<string> GetConditionTasks(ConditionType conditionType);

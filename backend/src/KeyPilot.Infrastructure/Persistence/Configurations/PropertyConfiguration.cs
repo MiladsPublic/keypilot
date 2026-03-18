@@ -51,12 +51,10 @@ public sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
             .HasMaxLength(100);
 
         builder.Property(property => property.AcceptedOfferDate)
-            .HasColumnName("accepted_offer_date")
-            .IsRequired();
+            .HasColumnName("accepted_offer_date");
 
         builder.Property(property => property.SettlementDate)
-            .HasColumnName("settlement_date")
-            .IsRequired();
+            .HasColumnName("settlement_date");
 
         builder.Property(property => property.UnconditionalDate)
             .HasColumnName("unconditional_date");

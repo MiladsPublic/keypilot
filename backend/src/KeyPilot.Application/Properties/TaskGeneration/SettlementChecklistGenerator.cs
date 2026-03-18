@@ -17,10 +17,11 @@ internal sealed class SettlementChecklistGenerator(ITaskTemplateService taskTemp
 
         foreach (var title in taskTemplateService.GetPreSettlementTasks())
         {
-            var key = $"{TaskStage.PreSettlement}:{title}".ToLowerInvariant();
+            var key = $"{TaskStage.SettlementPending}:{title}".ToLowerInvariant();
             if (!existing.Contains(key))
             {
-                property.AddTask(title, TaskStage.PreSettlement, property.SettlementDate, conditionId: null, createdAtUtc);
+                property.AddTask(title, TaskStage.SettlementPending, property.SettlementDate, conditionId: null, createdAtUtc,
+                    importance: TaskImportance.Mandatory);
                 existing.Add(key);
             }
         }
@@ -30,7 +31,8 @@ internal sealed class SettlementChecklistGenerator(ITaskTemplateService taskTemp
             var key = $"{TaskStage.Settlement}:{title}".ToLowerInvariant();
             if (!existing.Contains(key))
             {
-                property.AddTask(title, TaskStage.Settlement, property.SettlementDate, conditionId: null, createdAtUtc);
+                property.AddTask(title, TaskStage.Settlement, property.SettlementDate, conditionId: null, createdAtUtc,
+                    importance: TaskImportance.Mandatory);
                 existing.Add(key);
             }
         }

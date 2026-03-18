@@ -2,10 +2,13 @@ namespace KeyPilot.Domain.Properties;
 
 public enum PropertyStatus
 {
-    AcceptedOffer = 0,
-    Conditional = 1,
-    Unconditional = 2,
-    PreSettlement = 3,
-    Settled = 4,
-    Cancelled = 5
+    Discovery = 0,
+    OfferPreparation = 1,
+    Submitted = 2,
+    Conditional = 3,
+    Unconditional = 4,
+    SettlementPending = 5,
+    Settled = 6,
+    Archived = 7,
+    Cancelled = 8
 }

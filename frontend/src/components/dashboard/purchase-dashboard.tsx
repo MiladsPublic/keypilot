@@ -10,6 +10,7 @@ import { completeTask } from "@/features/properties/api/complete-task";
 import { waiveCondition } from "@/features/properties/api/waive-condition";
 import { failCondition } from "@/features/properties/api/fail-condition";
 import { cancelProperty } from "@/features/properties/api/cancel-property";
+import { archiveProperty } from "@/features/properties/api/archive-property";
 import { type Condition, type Property, type PropertyTask } from "@/features/properties/types/property";
 import { ConditionsCard, type ConditionAction } from "@/components/purchase/conditions-card";
 import { MethodGuidanceBanner } from "@/components/purchase/method-guidance-banner";
@@ -17,6 +18,7 @@ import { NextActionsCard } from "@/components/purchase/next-actions-card";
 import { ProgressCard } from "@/components/purchase/progress-card";
 import { PurchaseHeroCard } from "@/components/purchase/purchase-hero-card";
 import { SettlementCountdownCard } from "@/components/purchase/settlement-countdown-card";
+import { RemindersCard } from "@/components/purchase/reminders-card";
 import { StageTimeline } from "@/components/purchase/stage-timeline";
 import { TaskList } from "@/components/purchase/task-list";
 import { Button } from "@/components/ui/button";
@@ -65,7 +67,7 @@ function updateTaskSummary(tasks: PropertyTask[]) {
 }
 
 function groupedTasks(tasks: PropertyTask[]) {
-  const groups = ["conditional", "unconditional", "pre_settlement", "settlement"] as const;
+  const groups = ["discovery", "offer_preparation", "submitted", "conditional", "unconditional", "settlement_pending", "settlement"] as const;
 
   return groups.map((stage) => ({
     stage,
@@ -159,6 +161,28 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
       toast({
         title: "Couldn't cancel purchase",
         description: `Couldn't cancel ${selectedProperty.address}.`,
+        variant: "danger"
+      });
+    }
+  });
+
+  const archiveMutation = useMutation({
+    mutationFn: async (id: string) => archiveProperty(id, await getToken()),
+    onSuccess: (updatedProperty) => {
+      setProperties((prev) =>
+        prev.map((property) => (property.id === updatedProperty.id ? updatedProperty : property))
+      );
+      toast({
+        title: "Purchase archived",
+        description: `${updatedProperty.address} has been archived.`,
+        variant: "success"
+      });
+      router.refresh();
+    },
+    onError: () => {
+      toast({
+        title: "Couldn't archive purchase",
+        description: `Couldn't archive ${selectedProperty.address}.`,
         variant: "danger"
       });
     }
@@ -277,13 +301,23 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
 
       <MethodGuidanceBanner property={selectedProperty} />
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {(selectedProperty.status === "settled" || selectedProperty.status === "cancelled") ? (
+          <Button
+            className="rounded-full"
+            variant="outline"
+            disabled={archiveMutation.isPending}
+            onClick={() => archiveMutation.mutate(selectedProperty.id)}
+          >
+            Archive
+          </Button>
+        ) : null}
         <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
           <DialogTrigger asChild>
             <Button
               className="rounded-full"
               variant="outline"
-              disabled={selectedProperty.status === "settled" || selectedProperty.status === "cancelled"}
+              disabled={selectedProperty.status === "settled" || selectedProperty.status === "cancelled" || selectedProperty.status === "archived"}
             >
               Mark as cancelled
             </Button>
@@ -346,6 +380,8 @@ export function PurchaseDashboard({ initialProperties }: { initialProperties: Pr
             openConditions={selectedProperty.readinessSummary.openConditions}
             readinessSummary={selectedProperty.readinessSummary}
           />
+
+          <RemindersCard reminders={selectedProperty.reminders} />
         </div>
 
         <div className="order-3 lg:col-span-2">

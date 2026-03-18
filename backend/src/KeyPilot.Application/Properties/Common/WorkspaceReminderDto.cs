@@ -4,6 +4,7 @@ namespace KeyPilot.Application.Properties.Common;
 
 public sealed record WorkspaceReminderDto(
     Guid Id,
+    Guid? TaskId,
     string Key,
     string Title,
     DateTime ScheduledForUtc,
@@ -15,6 +16,7 @@ public sealed record WorkspaceReminderDto(
     {
         return new WorkspaceReminderDto(
             reminder.Id,
+            reminder.TaskId,
             reminder.Key,
             reminder.Title,
             reminder.ScheduledForUtc,

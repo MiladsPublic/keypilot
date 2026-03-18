@@ -10,6 +10,7 @@ import { completeCondition } from "@/features/properties/api/complete-condition"
 import { completeTask } from "@/features/properties/api/complete-task";
 import { settleProperty } from "@/features/properties/api/settle-property";
 import { cancelProperty } from "@/features/properties/api/cancel-property";
+import { archiveProperty } from "@/features/properties/api/archive-property";
 import { waiveCondition } from "@/features/properties/api/waive-condition";
 import { failCondition } from "@/features/properties/api/fail-condition";
 import { addDocument, type AddDocumentBody } from "@/features/properties/api/add-document";
@@ -38,7 +39,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 
 function groupedTasks(tasks: PropertyTask[]) {
-  const groups = ["conditional", "unconditional", "pre_settlement", "settlement"] as const;
+  const groups = ["discovery", "offer_preparation", "submitted", "conditional", "unconditional", "settlement_pending", "settlement"] as const;
 
   return groups.map((stage) => ({
     stage,
@@ -145,6 +146,25 @@ export function PropertySummaryCard({ property }: { property: Property }) {
       toast({
         title: "Couldn't cancel purchase",
         description: `Couldn't cancel ${localProperty.address}.`,
+        variant: "danger"
+      });
+    }
+  });
+
+  const archiveMutation = useMutation({
+    mutationFn: async (id: string) => archiveProperty(id, await getToken()),
+    onSuccess: () => {
+      toast({
+        title: "Purchase archived",
+        description: `${localProperty.address} has been archived.`,
+        variant: "success"
+      });
+      router.refresh();
+    },
+    onError: () => {
+      toast({
+        title: "Couldn't archive purchase",
+        description: `Couldn't archive ${localProperty.address}.`,
         variant: "danger"
       });
     }
@@ -268,9 +288,19 @@ export function PropertySummaryCard({ property }: { property: Property }) {
 
       <div className="flex justify-end">
         <div className="flex flex-wrap justify-end gap-2">
+          {(localProperty.status === "settled" || localProperty.status === "cancelled") ? (
+            <Button
+              className="rounded-full"
+              variant="outline"
+              disabled={archiveMutation.isPending}
+              onClick={() => archiveMutation.mutate(localProperty.id)}
+            >
+              Archive
+            </Button>
+          ) : null}
           <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="rounded-full" variant="outline" disabled={localProperty.status === "settled" || localProperty.status === "cancelled"}>
+              <Button className="rounded-full" variant="outline" disabled={localProperty.status === "settled" || localProperty.status === "cancelled" || localProperty.status === "archived"}>
                 Mark as cancelled
               </Button>
             </DialogTrigger>
@@ -296,7 +326,7 @@ export function PropertySummaryCard({ property }: { property: Property }) {
 
           <Dialog open={settleDialogOpen} onOpenChange={setSettleDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="rounded-full" disabled={localProperty.status === "settled" || localProperty.status === "cancelled"}>
+              <Button className="rounded-full" disabled={localProperty.status === "settled" || localProperty.status === "cancelled" || localProperty.status === "archived"}>
                 Mark as settled
               </Button>
             </DialogTrigger>

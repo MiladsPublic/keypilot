@@ -8,18 +8,21 @@ export function formatBuyingMethod(value: string) {
 }
 
 export const timelineStages = [
-  "accepted_offer",
+  "discovery",
+  "offer_preparation",
+  "submitted",
   "conditional",
   "unconditional",
-  "settled",
-  "cancelled"
+  "settlement_pending",
+  "settled"
 ] as const;
 
 const auctionTimelineStages = [
-  "accepted_offer",
+  "discovery",
+  "offer_preparation",
   "unconditional",
-  "settled",
-  "cancelled"
+  "settlement_pending",
+  "settled"
 ] as const;
 
 export function getTimelineStages(buyingMethod?: BuyingMethod): readonly string[] {
@@ -32,22 +35,25 @@ export function getTimelineStages(buyingMethod?: BuyingMethod): readonly string[
 
 const methodStageLabels: Partial<Record<BuyingMethod, Record<string, string>>> = {
   auction: {
-    accepted_offer: "Auction Won",
+    discovery: "Research",
+    offer_preparation: "Pre-Auction Prep",
     unconditional: "Unconditional",
-    pre_settlement: "Pre-Settlement",
+    settlement_pending: "Settlement Pending",
     settled: "Settled",
     cancelled: "Cancelled",
   },
   tender: {
-    accepted_offer: "Tender Accepted",
+    submitted: "Tender Submitted",
+    offer_preparation: "Prepare Tender",
   },
   deadline: {
-    accepted_offer: "Deadline Accepted",
+    submitted: "Deadline Submitted",
+    offer_preparation: "Prepare Offer",
   },
 };
 
 function defaultStageLabel(value: string): string {
-  const normalized = value === "settlement" ? "settled" : value;
+  const normalized = value === "settlement" ? "settled" : value === "settlement_pending" ? "settlement_pending" : value;
 
   return normalized
     .split("_")
@@ -151,7 +157,7 @@ export function badgeVariantForStatus(
     return "danger";
   }
 
-  if (status === "conditional" || status === "pending" || status === "pre_settlement") {
+  if (status === "conditional" || status === "pending" || status === "settlement_pending" || status === "needs_attention") {
     return "warning";
   }
 

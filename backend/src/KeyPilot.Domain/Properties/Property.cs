@@ -16,14 +16,15 @@ public sealed class Property : AuditableEntity
 
     private Property(
         string address,
-        DateOnly acceptedOfferDate,
-        DateOnly settlementDate,
+        DateOnly? acceptedOfferDate,
+        DateOnly? settlementDate,
         decimal? purchasePrice,
         decimal? depositAmount,
         BuyingMethod buyingMethod,
         string ownerUserId,
         Guid? workspaceId,
         string? methodReference,
+        PropertyStatus initialStatus,
         DateTime createdAtUtc)
     {
         Address = address;
@@ -35,7 +36,7 @@ public sealed class Property : AuditableEntity
         OwnerUserId = ownerUserId;
         WorkspaceId = workspaceId;
         MethodReference = methodReference;
-        Status = PropertyStatus.Conditional;
+        Status = initialStatus;
         CreatedAtUtc = createdAtUtc;
     }
 
@@ -45,11 +46,11 @@ public sealed class Property : AuditableEntity
 
     public string Address { get; private set; } = string.Empty;
 
-    public PropertyStatus Status { get; private set; } = PropertyStatus.AcceptedOffer;
+    public PropertyStatus Status { get; private set; } = PropertyStatus.Discovery;
 
-    public DateOnly AcceptedOfferDate { get; private set; }
+    public DateOnly? AcceptedOfferDate { get; private set; }
 
-    public DateOnly SettlementDate { get; private set; }
+    public DateOnly? SettlementDate { get; private set; }
 
     public decimal? PurchasePrice { get; private set; }
 
@@ -77,15 +78,16 @@ public sealed class Property : AuditableEntity
 
     public static Property Create(
         string address,
-        DateOnly acceptedOfferDate,
-        DateOnly settlementDate,
+        DateOnly? acceptedOfferDate,
+        DateOnly? settlementDate,
         decimal? purchasePrice,
         decimal? depositAmount,
         string ownerUserId,
         Guid? workspaceId,
         DateTime createdAtUtc,
         BuyingMethod buyingMethod = BuyingMethod.PrivateSale,
-        string? methodReference = null)
+        string? methodReference = null,
+        PropertyStatus initialStatus = PropertyStatus.Conditional)
     {
         return new Property(
             address,
@@ -97,7 +99,47 @@ public sealed class Property : AuditableEntity
             ownerUserId,
             workspaceId,
             methodReference,
+            initialStatus,
             createdAtUtc);
+    }
+
+    public void Update(
+        string? address,
+        DateOnly? acceptedOfferDate,
+        DateOnly? settlementDate,
+        decimal? purchasePrice,
+        decimal? depositAmount,
+        string? methodReference)
+    {
+        if (address is not null)
+        {
+            Address = address;
+        }
+
+        if (acceptedOfferDate.HasValue)
+        {
+            AcceptedOfferDate = acceptedOfferDate.Value;
+        }
+
+        if (settlementDate.HasValue)
+        {
+            SettlementDate = settlementDate.Value;
+        }
+
+        if (purchasePrice.HasValue)
+        {
+            PurchasePrice = purchasePrice.Value;
+        }
+
+        if (depositAmount.HasValue)
+        {
+            DepositAmount = depositAmount.Value;
+        }
+
+        if (methodReference is not null)
+        {
+            MethodReference = methodReference;
+        }
     }
 
     public Condition AddCondition(ConditionType type, DateOnly dueDate, DateTime createdAtUtc)
@@ -112,9 +154,11 @@ public sealed class Property : AuditableEntity
         TaskStage stage,
         DateOnly? dueDate,
         Guid? conditionId,
-        DateTime createdAtUtc)
+        DateTime createdAtUtc,
+        string? description = null,
+        TaskImportance importance = TaskImportance.Recommended)
     {
-        var task = new PropertyTask(Id, conditionId, title, stage, dueDate, createdAtUtc);
+        var task = new PropertyTask(Id, conditionId, title, stage, dueDate, createdAtUtc, description, importance);
         _tasks.Add(task);
         return task;
     }
@@ -123,9 +167,10 @@ public sealed class Property : AuditableEntity
         string key,
         string title,
         DateTime scheduledForUtc,
-        DateTime createdAtUtc)
+        DateTime createdAtUtc,
+        Guid? taskId = null)
     {
-        var reminder = WorkspaceReminder.Create(Id, key, title, scheduledForUtc, createdAtUtc);
+        var reminder = WorkspaceReminder.Create(Id, key, title, scheduledForUtc, createdAtUtc, taskId);
         _reminders.Add(reminder);
         return reminder;
     }
@@ -165,6 +210,14 @@ public sealed class Property : AuditableEntity
         Status = PropertyStatus.Cancelled;
     }
 
+    public void MarkArchived()
+    {
+        if (Status is PropertyStatus.Settled or PropertyStatus.Cancelled)
+        {
+            Status = PropertyStatus.Archived;
+        }
+    }
+
     public void RecalculateStatus(DateOnly today)
     {
         if (CancelledDate.HasValue)
@@ -176,6 +229,18 @@ public sealed class Property : AuditableEntity
         if (SettledDate.HasValue)
         {
             Status = PropertyStatus.Settled;
+            return;
+        }
+
+        // Early lifecycle stages — stay as-is if no accepted offer date
+        if (!AcceptedOfferDate.HasValue)
+        {
+            if (Status is PropertyStatus.Discovery or PropertyStatus.OfferPreparation or PropertyStatus.Submitted)
+            {
+                return;
+            }
+
+            Status = PropertyStatus.Discovery;
             return;
         }
 

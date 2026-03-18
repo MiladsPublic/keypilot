@@ -56,26 +56,29 @@ internal sealed class WorkspaceReminderSyncService(IApplicationDbContext dbConte
                 ToUtcAtNineAm(condition.DueDate, nowUtc));
         }
 
-        if (workspace.BuyingMethod == BuyingMethod.Auction)
+        if (workspace.BuyingMethod == BuyingMethod.Auction && workspace.AcceptedOfferDate.HasValue)
         {
             yield return (
                 "auction:readiness",
                 "Auction readiness check",
-                ToUtcAtNineAm(workspace.AcceptedOfferDate.AddDays(-1), nowUtc));
+                ToUtcAtNineAm(workspace.AcceptedOfferDate.Value.AddDays(-1), nowUtc));
         }
 
-        if (workspace.BuyingMethod == BuyingMethod.Deadline)
+        if (workspace.BuyingMethod == BuyingMethod.Deadline && workspace.SettlementDate.HasValue)
         {
             yield return (
                 "deadline:readiness",
                 "Deadline readiness check",
-                ToUtcAtNineAm(workspace.SettlementDate.AddDays(-1), nowUtc));
+                ToUtcAtNineAm(workspace.SettlementDate.Value.AddDays(-1), nowUtc));
         }
 
-        yield return (
-            "settlement:due",
-            "Settlement date reminder",
-            ToUtcAtNineAm(workspace.SettlementDate, nowUtc));
+        if (workspace.SettlementDate.HasValue)
+        {
+            yield return (
+                "settlement:due",
+                "Settlement date reminder",
+                ToUtcAtNineAm(workspace.SettlementDate.Value, nowUtc));
+        }
     }
 
     private static DateTime ToUtcAtNineAm(DateOnly date, DateTime nowUtc)

@@ -7,6 +7,6 @@ public sealed record WorkspaceWorkflowStartInput(
     Guid PropertyId,
     string OwnerUserId,
     BuyingMethod BuyingMethod,
-    DateOnly AcceptedOfferDate,
-    DateOnly SettlementDate,
+    DateOnly? AcceptedOfferDate,
+    DateOnly? SettlementDate,
     IReadOnlyCollection<DateOnly> PendingConditionDueDates);

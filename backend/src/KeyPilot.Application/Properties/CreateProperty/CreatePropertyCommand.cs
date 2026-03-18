@@ -9,8 +9,8 @@ public sealed record CreatePropertyConditionInput(
 
 public sealed record CreatePropertyCommand(
     string Address,
-    DateOnly AcceptedOfferDate,
-    DateOnly SettlementDate,
+    DateOnly? AcceptedOfferDate,
+    DateOnly? SettlementDate,
     string BuyingMethod,
     decimal? PurchasePrice,
     decimal? DepositAmount,

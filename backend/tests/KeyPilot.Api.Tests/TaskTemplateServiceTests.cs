@@ -79,6 +79,7 @@ public sealed class TaskTemplateServiceTests
             _inner = provider.GetRequiredService<ITaskTemplateService>();
         }
 
+        public IReadOnlyCollection<string> GetDiscoveryTasks(BuyingMethod buyingMethod) => _inner.GetDiscoveryTasks(buyingMethod);
         public IReadOnlyCollection<string> GetAcceptedOfferTasks(BuyingMethod buyingMethod) => _inner.GetAcceptedOfferTasks(buyingMethod);
         public IReadOnlyCollection<string> GetConditionTasks(ConditionType conditionType) => _inner.GetConditionTasks(conditionType);
         public IReadOnlyCollection<string> GetPreSettlementTasks() => _inner.GetPreSettlementTasks();

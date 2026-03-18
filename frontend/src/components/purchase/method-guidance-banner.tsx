@@ -66,7 +66,7 @@ function getMethodGuidance(method: BuyingMethod, property: Property, openConditi
       return {
         icon: <Gavel className="h-4 w-4" />,
         title: "Unconditional auction purchase",
-        description: property.daysUntilSettlement <= 7
+        description: property.daysUntilSettlement != null && property.daysUntilSettlement <= 7
           ? `Settlement is in ${property.daysUntilSettlement} day${property.daysUntilSettlement !== 1 ? "s" : ""}. Confirm your lawyer and funds are ready.`
           : "No conditions apply — focus on completing settlement preparation tasks.",
         className: "border-sky-200 bg-sky-50 text-sky-900 [&>svg]:text-sky-600",

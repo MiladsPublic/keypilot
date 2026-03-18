@@ -13,17 +13,21 @@ public sealed class WorkspaceReminder : AuditableEntity
         string key,
         string title,
         DateTime scheduledForUtc,
-        DateTime createdAtUtc)
+        DateTime createdAtUtc,
+        Guid? taskId = null)
     {
         PropertyId = propertyId;
         Key = key;
         Title = title;
         ScheduledForUtc = scheduledForUtc;
         Status = WorkspaceReminderStatus.Pending;
+        TaskId = taskId;
         CreatedAtUtc = createdAtUtc;
     }
 
     public Guid PropertyId { get; private set; }
+
+    public Guid? TaskId { get; private set; }
 
     public string Key { get; private set; } = string.Empty;
 
@@ -42,9 +46,10 @@ public sealed class WorkspaceReminder : AuditableEntity
         string key,
         string title,
         DateTime scheduledForUtc,
-        DateTime createdAtUtc)
+        DateTime createdAtUtc,
+        Guid? taskId = null)
     {
-        return new WorkspaceReminder(propertyId, key, title, scheduledForUtc, createdAtUtc);
+        return new WorkspaceReminder(propertyId, key, title, scheduledForUtc, createdAtUtc, taskId);
     }
 
     public void MarkSent(DateTime sentAtUtc)

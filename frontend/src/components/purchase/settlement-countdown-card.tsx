@@ -3,7 +3,20 @@ import { CalendarClock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, countdownTone } from "@/components/purchase/utils";
 
-export function SettlementCountdownCard({ settlementDate, daysUntilSettlement }: { settlementDate: string; daysUntilSettlement: number }) {
+export function SettlementCountdownCard({ settlementDate, daysUntilSettlement }: { settlementDate: string | null; daysUntilSettlement: number | null }) {
+  if (!settlementDate || daysUntilSettlement == null) {
+    return (
+      <Card className="rounded-2xl">
+        <CardHeader>
+          <CardTitle className="text-lg">Settlement</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-ink/65">No settlement date set yet.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const tone = countdownTone(daysUntilSettlement);
 
   return (

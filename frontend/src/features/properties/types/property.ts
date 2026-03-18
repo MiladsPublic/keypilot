@@ -10,9 +10,12 @@ export interface PropertyTask {
   id: string;
   conditionId: string | null;
   title: string;
-  stage: "accepted_offer" | "conditional" | "unconditional" | "pre_settlement" | "settlement";
+  description: string | null;
+  importance: "mandatory" | "recommended" | "informational";
+  notes: string | null;
+  stage: "discovery" | "offer_preparation" | "submitted" | "conditional" | "unconditional" | "settlement_pending" | "settlement";
   dueDate: string | null;
-  status: "pending" | "completed";
+  status: "pending" | "completed" | "needs_attention";
   completedAtUtc: string | null;
 }
 
@@ -55,21 +58,33 @@ export interface Contact {
   createdAtUtc: string;
 }
 
+export interface WorkspaceReminder {
+  id: string;
+  taskId: string | null;
+  key: string;
+  title: string;
+  scheduledForUtc: string;
+  status: "pending" | "sent" | "cancelled";
+  sentAtUtc: string | null;
+  cancelledAtUtc: string | null;
+}
+
 export interface Property {
   id: string;
   workspaceId: string | null;
   address: string;
   buyingMethod: BuyingMethod;
   methodReference: string | null;
-  status: "accepted_offer" | "conditional" | "unconditional" | "pre_settlement" | "settled" | "cancelled";
-  acceptedOfferDate: string;
+  status: "discovery" | "offer_preparation" | "submitted" | "conditional" | "unconditional" | "settlement_pending" | "settled" | "archived" | "cancelled";
+  acceptedOfferDate: string | null;
   unconditionalDate: string | null;
-  settlementDate: string;
+  settlementDate: string | null;
   settledDate: string | null;
   cancelledDate: string | null;
-  daysUntilSettlement: number;
+  daysUntilSettlement: number | null;
   purchasePrice: number | null;
   depositAmount: number | null;
+  reminders: WorkspaceReminder[];
   conditions: Condition[];
   tasks: PropertyTask[];
   documents: Document[];

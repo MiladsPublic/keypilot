@@ -24,7 +24,7 @@ export function TaskItem({ task, disabled, onToggle }: TaskItemProps) {
         <Checkbox
           className="mt-0.5"
           checked={task.status === "completed"}
-          disabled={task.status === "completed" || disabled}
+          disabled={task.status === "completed" || task.status === "needs_attention" || disabled}
           onCheckedChange={() => onToggle?.(task)}
         />
         <div className="min-w-0 flex-1">
@@ -40,7 +40,7 @@ export function TaskItem({ task, disabled, onToggle }: TaskItemProps) {
             {dueLabel}
           </p>
         </div>
-        <Badge variant={badgeVariantForStatus(task.status)}>{task.status}</Badge>
+        <Badge variant={badgeVariantForStatus(task.status)}>{task.status === "needs_attention" ? "needs attention" : task.status}</Badge>
       </CardContent>
     </Card>
   );

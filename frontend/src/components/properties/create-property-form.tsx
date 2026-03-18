@@ -170,7 +170,7 @@ export function CreatePropertyForm() {
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-ink/65">Purchase setup</p>
             <CardTitle>Start a purchase workspace</CardTitle>
-            <CardDescription>Start with the accepted offer, settlement date, and active conditions.</CardDescription>
+            <CardDescription>Enter a property address to begin. Add offer and settlement dates when they&apos;re known.</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -235,7 +235,7 @@ export function CreatePropertyForm() {
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-ink/65">Timeline</p>
           <div className="grid gap-5 md:grid-cols-2">
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-ink/80">{dateLabel}</span>
+              <span className="text-sm font-medium text-ink/80">{dateLabel} (optional)</span>
               <Input type="date" {...register("acceptedOfferDate")} />
               {errors.acceptedOfferDate ? (
                 <p className="text-sm text-red-700">{errors.acceptedOfferDate.message}</p>
@@ -243,7 +243,7 @@ export function CreatePropertyForm() {
             </label>
 
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-ink/80">Settlement date</span>
+              <span className="text-sm font-medium text-ink/80">Settlement date (optional)</span>
               <Input type="date" {...register("settlementDate")} />
               {errors.settlementDate ? (
                 <p className="text-sm text-red-700">{errors.settlementDate.message}</p>

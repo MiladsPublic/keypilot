@@ -11,8 +11,8 @@ public static class CreatePropertyEndpoint
 {
     public sealed record CreatePropertyRequest(
         string Address,
-        DateOnly AcceptedOfferDate,
-        DateOnly SettlementDate,
+        DateOnly? AcceptedOfferDate,
+        DateOnly? SettlementDate,
         string? BuyingMethod,
         decimal? PurchasePrice,
         decimal? DepositAmount,

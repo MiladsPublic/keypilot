@@ -7,8 +7,7 @@ import { type BuyingMethod, type Property } from "@/features/properties/types/pr
 
 export function StageTimeline({ currentStatus, buyingMethod }: { currentStatus: Property["status"]; buyingMethod?: BuyingMethod }) {
   const stages = getTimelineStages(buyingMethod);
-  const timelineStatus = currentStatus === "pre_settlement" ? "unconditional" : currentStatus;
-  const currentStageIndex = stages.indexOf(timelineStatus);
+  const currentStageIndex = stages.indexOf(currentStatus);
 
   return (
     <div className={`grid gap-3 md:grid-cols-${stages.length}`}>

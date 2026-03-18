@@ -4,10 +4,14 @@ namespace KeyPilot.Application.Properties.Common;
 
 internal static class PropertyMvpDtoMapper
 {
-    public static int DaysUntilSettlement(Property property, DateOnly today)
+    public static int? DaysUntilSettlement(Property property, DateOnly today)
     {
-        var diff = property.SettlementDate.DayNumber - today.DayNumber;
-        return diff;
+        if (!property.SettlementDate.HasValue)
+        {
+            return null;
+        }
+
+        return property.SettlementDate.Value.DayNumber - today.DayNumber;
     }
 
     public static TaskSummaryDto TaskSummary(Property property)
@@ -27,9 +31,9 @@ internal static class PropertyMvpDtoMapper
         var overdueTasks = property.Tasks.Count(task => task.Status == Domain.Properties.TaskStatus.Pending && task.DueDate.HasValue && task.DueDate.Value < today);
         var settlementTasksRemaining = property.Tasks.Count(task =>
             task.Status == Domain.Properties.TaskStatus.Pending &&
-            (task.Stage == TaskStage.PreSettlement || task.Stage == TaskStage.Settlement));
+            (task.Stage == TaskStage.SettlementPending || task.Stage == TaskStage.Settlement));
 
-        var mode = property.Status == PropertyStatus.Unconditional || property.Status == PropertyStatus.PreSettlement
+        var mode = property.Status == PropertyStatus.Unconditional || property.Status == PropertyStatus.SettlementPending
             ? "settlement"
             : "conditional";
 

@@ -31,12 +31,9 @@ public sealed class CreatePropertyValidator : AbstractValidator<CreatePropertyCo
         RuleFor(x => x.OwnerUserId)
             .NotEmpty();
 
-        RuleFor(x => x.AcceptedOfferDate)
-            .NotEmpty();
-
         RuleFor(x => x.SettlementDate)
-            .NotEmpty()
-            .GreaterThanOrEqualTo(x => x.AcceptedOfferDate);
+            .GreaterThanOrEqualTo(x => x.AcceptedOfferDate!.Value)
+            .When(x => x.AcceptedOfferDate.HasValue && x.SettlementDate.HasValue);
 
         RuleFor(x => x.BuyingMethod)
             .NotEmpty()

@@ -50,8 +50,8 @@ public static class SeedEndpoint
         var building = property.AddCondition(ConditionType.BuildingReport, buildingDue, nowUtc);
         var lim = property.AddCondition(ConditionType.Lim, limDue, nowUtc);
 
-        property.AddTask("Confirm lawyer details", TaskStage.AcceptedOffer, today.AddDays(1), null, nowUtc);
-        property.AddTask("Review active conditions", TaskStage.AcceptedOffer, today.AddDays(2), null, nowUtc);
+        property.AddTask("Confirm lawyer details", TaskStage.Submitted, today.AddDays(1), null, nowUtc);
+        property.AddTask("Review active conditions", TaskStage.Submitted, today.AddDays(2), null, nowUtc);
 
         property.AddTask("Submit finance documents", TaskStage.Conditional, financeDue.AddDays(-2), finance.Id, nowUtc);
         property.AddTask("Confirm lender approval", TaskStage.Conditional, financeDue.AddDays(-1), finance.Id, nowUtc);
@@ -60,9 +60,9 @@ public static class SeedEndpoint
         property.AddTask("Obtain LIM report", TaskStage.Conditional, limDue.AddDays(-3), lim.Id, nowUtc);
         property.AddTask("Review LIM findings", TaskStage.Conditional, limDue.AddDays(-1), lim.Id, nowUtc);
 
-        property.AddTask("Confirm insurance active from settlement date", TaskStage.PreSettlement, settlementDate.AddDays(-5), null, nowUtc);
-        property.AddTask("Complete final inspection", TaskStage.PreSettlement, settlementDate.AddDays(-3), null, nowUtc);
-        property.AddTask("Confirm settlement funds ready", TaskStage.PreSettlement, settlementDate.AddDays(-1), null, nowUtc);
+        property.AddTask("Confirm insurance active from settlement date", TaskStage.SettlementPending, settlementDate.AddDays(-5), null, nowUtc);
+        property.AddTask("Complete final inspection", TaskStage.SettlementPending, settlementDate.AddDays(-3), null, nowUtc);
+        property.AddTask("Confirm settlement funds ready", TaskStage.SettlementPending, settlementDate.AddDays(-1), null, nowUtc);
         property.AddTask("Keys collected", TaskStage.Settlement, settlementDate, null, nowUtc);
 
         property.RecalculateStatus();

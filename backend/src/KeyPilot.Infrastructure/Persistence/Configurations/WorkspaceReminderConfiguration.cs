@@ -19,6 +19,9 @@ public sealed class WorkspaceReminderConfiguration : IEntityTypeConfiguration<Wo
             .HasColumnName("property_id")
             .IsRequired();
 
+        builder.Property(reminder => reminder.TaskId)
+            .HasColumnName("task_id");
+
         builder.Property(reminder => reminder.Key)
             .HasColumnName("key")
             .HasMaxLength(160)

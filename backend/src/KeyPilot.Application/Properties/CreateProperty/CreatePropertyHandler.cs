@@ -34,6 +34,9 @@ public sealed class CreatePropertyHandler(
     {
         var createdAtUtc = dateTimeProvider.UtcNow;
         var buyingMethod = ParseBuyingMethod(request.BuyingMethod);
+        var hasAcceptedOffer = request.AcceptedOfferDate.HasValue;
+        var initialStatus = hasAcceptedOffer ? PropertyStatus.Conditional : PropertyStatus.Discovery;
+
         var property = Property.Create(
             request.Address.Trim(),
             request.AcceptedOfferDate,
@@ -44,35 +47,49 @@ public sealed class CreatePropertyHandler(
             workspaceId: Guid.NewGuid(),
             createdAtUtc: createdAtUtc,
             buyingMethod: buyingMethod,
-            methodReference: request.MethodReference?.Trim());
+            methodReference: request.MethodReference?.Trim(),
+            initialStatus: initialStatus);
 
-        foreach (var title in taskTemplateService.GetAcceptedOfferTasks(buyingMethod))
+        if (hasAcceptedOffer)
         {
-            property.AddTask(title, TaskStage.AcceptedOffer, null, conditionId: null, createdAtUtc);
-        }
-
-        var selectedConditions = request.Conditions ?? [];
-
-        foreach (var conditionInput in selectedConditions)
-        {
-            var conditionType = ParseConditionType(conditionInput.Type);
-            var dueDate = conditionInput.DueDate
-                ?? request.AcceptedOfferDate.AddDays(
-                    conditionInput.DaysFromAcceptedOffer
-                    ?? DefaultConditionOffsets[conditionType]);
-
-            var condition = property.AddCondition(conditionType, dueDate, createdAtUtc);
-
-            foreach (var title in taskTemplateService.GetConditionTasks(conditionType))
+            foreach (var title in taskTemplateService.GetAcceptedOfferTasks(buyingMethod))
             {
-                var taskDueDate = dueDate.AddDays(GetConditionTaskOffset(title));
-                property.AddTask(title, TaskStage.Conditional, taskDueDate, condition.Id, createdAtUtc);
+                property.AddTask(title, TaskStage.Submitted, null, conditionId: null, createdAtUtc,
+                    importance: TaskImportance.Mandatory);
+            }
+
+            var selectedConditions = request.Conditions ?? [];
+
+            foreach (var conditionInput in selectedConditions)
+            {
+                var conditionType = ParseConditionType(conditionInput.Type);
+                var dueDate = conditionInput.DueDate
+                    ?? request.AcceptedOfferDate!.Value.AddDays(
+                        conditionInput.DaysFromAcceptedOffer
+                        ?? DefaultConditionOffsets[conditionType]);
+
+                var condition = property.AddCondition(conditionType, dueDate, createdAtUtc);
+
+                foreach (var title in taskTemplateService.GetConditionTasks(conditionType))
+                {
+                    var taskDueDate = dueDate.AddDays(GetConditionTaskOffset(title));
+                    property.AddTask(title, TaskStage.Conditional, taskDueDate, condition.Id, createdAtUtc,
+                        importance: TaskImportance.Mandatory);
+                }
+            }
+
+            workspaceLifecycleService.ApplyDerivedState(property, DateOnly.FromDateTime(createdAtUtc));
+            settlementChecklistGenerator.EnsureGenerated(property, createdAtUtc);
+            await workspaceReminderSyncService.SyncAsync(property, createdAtUtc, cancellationToken);
+        }
+        else
+        {
+            foreach (var title in taskTemplateService.GetDiscoveryTasks(buyingMethod))
+            {
+                property.AddTask(title, TaskStage.Discovery, null, conditionId: null, createdAtUtc,
+                    importance: TaskImportance.Recommended);
             }
         }
-
-        workspaceLifecycleService.ApplyDerivedState(property, DateOnly.FromDateTime(createdAtUtc));
-        settlementChecklistGenerator.EnsureGenerated(property, createdAtUtc);
-        await workspaceReminderSyncService.SyncAsync(property, createdAtUtc, cancellationToken);
 
         await dbContext.AddPropertyAsync(property, cancellationToken);
         await workflowOutbox.EnqueueWorkspaceCreatedAsync(property, createdAtUtc, cancellationToken);

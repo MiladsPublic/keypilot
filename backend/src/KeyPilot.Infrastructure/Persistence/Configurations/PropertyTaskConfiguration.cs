@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using KeyPilot.Domain.Properties;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -27,11 +28,28 @@ public sealed class PropertyTaskConfiguration : IEntityTypeConfiguration<Propert
             .HasMaxLength(250)
             .IsRequired();
 
+        builder.Property(task => task.Description)
+            .HasColumnName("description")
+            .HasMaxLength(1000);
+
+        builder.Property(task => task.Importance)
+            .HasColumnName("importance")
+            .HasConversion(
+                value => ToSnakeCase(value.ToString()),
+                value => Enum.Parse<TaskImportance>(value.Replace("_", ""), ignoreCase: true))
+            .HasMaxLength(32)
+            .HasDefaultValueSql("'recommended'")
+            .IsRequired();
+
+        builder.Property(task => task.Notes)
+            .HasColumnName("notes")
+            .HasMaxLength(2000);
+
         builder.Property(task => task.Stage)
             .HasColumnName("stage")
             .HasConversion(
-                value => value.ToString().ToLowerInvariant(),
-                value => Enum.Parse<TaskStage>(value, ignoreCase: true))
+                value => ToSnakeCase(value.ToString()),
+                value => Enum.Parse<TaskStage>(value.Replace("_", ""), ignoreCase: true))
             .HasMaxLength(32)
             .IsRequired();
 
@@ -41,8 +59,8 @@ public sealed class PropertyTaskConfiguration : IEntityTypeConfiguration<Propert
         builder.Property(task => task.Status)
             .HasColumnName("status")
             .HasConversion(
-                value => value.ToString().ToLowerInvariant(),
-                value => Enum.Parse<Domain.Properties.TaskStatus>(value, ignoreCase: true))
+                value => ToSnakeCase(value.ToString()),
+                value => Enum.Parse<Domain.Properties.TaskStatus>(value.Replace("_", ""), ignoreCase: true))
             .HasMaxLength(32)
             .IsRequired();
 
@@ -56,4 +74,7 @@ public sealed class PropertyTaskConfiguration : IEntityTypeConfiguration<Propert
         builder.HasIndex(task => task.PropertyId);
         builder.HasIndex(task => task.ConditionId);
     }
+
+    private static string ToSnakeCase(string input)
+        => Regex.Replace(input, "(?<!^)([A-Z])", "_$1").ToLowerInvariant();
 }

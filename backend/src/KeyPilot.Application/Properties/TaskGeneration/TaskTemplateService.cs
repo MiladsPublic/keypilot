@@ -4,6 +4,23 @@ namespace KeyPilot.Application.Properties.TaskGeneration;
 
 internal sealed class TaskTemplateService : ITaskTemplateService
 {
+    private static readonly IReadOnlyCollection<string> DiscoveryTasks =
+    [
+        "Research the neighbourhood",
+        "Get mortgage pre-approval",
+        "Shortlist potential properties",
+        "Choose a lawyer or conveyancer"
+    ];
+
+    private static readonly IReadOnlyCollection<string> AuctionDiscoveryTasks =
+    [
+        "Research the neighbourhood",
+        "Get mortgage pre-approval",
+        "Arrange building report before auction",
+        "Confirm finance is unconditional",
+        "Choose a lawyer or conveyancer"
+    ];
+
     private static readonly IReadOnlyCollection<string> AcceptedOfferTasks =
     [
         "Confirm lawyer details",
@@ -43,12 +60,21 @@ internal sealed class TaskTemplateService : ITaskTemplateService
         "Confirm key collection details"
     ];
 
-    private static readonly IReadOnlyCollection<string> SettlementTasks =
+    private static readonly IReadOnlyCollection<string> SettlementDayTasks =
     [
         "Lawyer confirms settlement",
         "Funds transferred",
         "Keys collected"
     ];
+
+    public IReadOnlyCollection<string> GetDiscoveryTasks(BuyingMethod buyingMethod)
+    {
+        return buyingMethod switch
+        {
+            BuyingMethod.Auction => AuctionDiscoveryTasks,
+            _ => DiscoveryTasks
+        };
+    }
 
     public IReadOnlyCollection<string> GetAcceptedOfferTasks(BuyingMethod buyingMethod)
     {
@@ -96,5 +122,5 @@ internal sealed class TaskTemplateService : ITaskTemplateService
 
     public IReadOnlyCollection<string> GetPreSettlementTasks() => PreSettlementTasks;
 
-    public IReadOnlyCollection<string> GetSettlementTasks() => SettlementTasks;
+    public IReadOnlyCollection<string> GetSettlementTasks() => SettlementDayTasks;
 }

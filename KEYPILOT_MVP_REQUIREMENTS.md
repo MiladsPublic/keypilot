@@ -1,700 +1,298 @@
-# KEYPILOT_MVP_REQUIREMENTS.md
-
-# KeyPilot MVP Requirements
-Version: 0.1
-Scope: Accepted Offer → Settlement
-Product: KeyPilot
-Primary channel: Responsive web app (mobile-first)
-Architecture target: Next.js frontend + .NET modular monolith backend + Postgres
+# KeyPilot (Home Buyer Copilot)
+## MVP Requirements – New Zealand
 
 ---
 
-## 1. Product Goal
+## 1. Product Overview
 
-KeyPilot helps home buyers in New Zealand manage the period from accepted offer to settlement.
+KeyPilot is a web application that helps buyers manage the **home buying process in New Zealand** from early intent through to settlement.
 
-The MVP is not a property search tool, mortgage marketplace, or legal platform.
-It is a transaction management app that helps buyers understand:
-- what stage they are in
-- what conditions are active
-- what tasks they need to complete next
-- what deadlines are approaching
-- how close they are to settlement
+It is not just a checklist tool.
 
----
+It is a **guided, workflow-driven system** that helps buyers answer:
 
-## 2. MVP Scope
+- Where am I in the process?
+- What should I do next?
+- What is my biggest risk right now?
 
-### In scope
-- Create a purchase workspace after an offer has been accepted
-- Capture key purchase details
-- Capture and track purchase conditions
-- Auto-generate tasks from selected conditions
-- Display the purchase stage
-- Display deadlines and next tasks
-- Allow tasks to be marked complete
-- Allow conditions to be marked complete
-- Progress the purchase from accepted offer to settlement
-- Basic dashboard for one purchase
-- Responsive web UI designed mobile-first
-
-### Out of scope
-- Property search
-- Offer creation
-- Mortgage pre-approval
-- Bank integrations
-- Lawyer integrations
-- Real estate portal integrations
-- Insurance integrations
-- Inspection booking
-- AI document summaries
-- Push notifications
-- SMS
-- Multi-property comparison
-- Partner marketplace
-- Workflow builder / generic rules engine
+The product must support **real-world buying scenarios**, including:
+- multiple properties at once
+- different buying methods
+- time-sensitive decisions
+- legally significant milestones
 
 ---
 
-## 3. Core User Problem
+## 2. Core Concept: Workspace
 
-After an offer is accepted, buyers often manage the transaction through:
-- email
-- PDFs
+### Definition
+
+A **Workspace** represents a single property purchase journey.
+
+One workspace includes:
+- property details
+- buying method
+- lifecycle stage
+- tasks
+- reminders
+- documents (evidence)
+- key dates (offer, conditions, settlement)
+
+A user can have **multiple workspaces active at the same time**.
+
+---
+
+## 3. Supported Buying Methods (MVP)
+
+The system must support the following buying methods:
+
+- Auction
+- Negotiation / Asking Price
+- Deadline Sale
+- Tender
+- Private Sale
+
+### Requirement
+
+The system must be **method-aware**:
+
+- behaviour
+- guidance
+- tasks
+- risk messaging
+- workflow timing
+
+must adapt based on the selected buying method.
+
+---
+
+## 4. Lifecycle Model
+
+Each workspace progresses through a lifecycle.
+
+### Standard Stages
+
+1. Discovery
+2. Offer Preparation
+3. Submitted
+4. Conditional (if applicable)
+5. Unconditional
+6. Settlement Pending
+7. Settled
+8. Archived
+
+### Requirements
+
+- Stage must be **persisted and/or consistently derived**
+- Stage must be visible in UI
+- Stage transitions must be controlled and predictable
+- Some transitions may require explicit confirmation
+
+---
+
+## 5. Tasks
+
+Tasks represent actions the buyer must complete.
+
+### Requirements
+
+Tasks must:
+- belong to a workspace
+- have a title and description
+- have optional due date
+- have status (pending / completed / needs attention)
+- explain why they matter
+
+Tasks may be:
+- mandatory
+- recommended
+- informational
+
+### Evidence
+
+Some tasks should support:
+- document attachment
 - notes
-- spreadsheets
-- calls with lawyer / broker / agent
-
-The MVP solves:
-- “What do I need to do next?”
-- “What conditions are due soon?”
-- “Where am I in the process?”
-- “Am I ready for settlement?”
+- verification status (optional future enhancement)
 
 ---
 
-## 4. Primary User
+## 6. Reminders & Deadlines
 
-### Primary persona
-Home buyer in New Zealand with an accepted offer who needs help managing the transaction through to settlement.
+The system must help users avoid missing critical deadlines.
 
-### Assumptions
-- User has already found the property
-- User has an accepted offer or signed agreement
-- User knows or can enter the settlement date
-- User knows which conditions apply, or can select from a standard list
+### Requirements
 
----
+- reminders must be first-class records
+- reminders must be tied to:
+  - tasks
+  - lifecycle events
+  - key dates (auction, condition due, settlement)
 
-## 5. Product Boundary
+- reminders must:
+  - have due date/time
+  - be visible in dashboard
+  - increase in urgency as due date approaches
 
-### Start
-Offer accepted
+### Behaviour
 
-### End
-Settlement complete
-
-The application lifecycle begins only after the user has an accepted offer.
-
----
-
-## 6. Purchase Lifecycle Stages
-
-The MVP must support these stages:
-1. accepted_offer
-2. conditional
-3. unconditional
-4. pre_settlement
-5. settled
-
-### Stage meaning
-
-#### accepted_offer
-Offer has been accepted and purchase has been created in the app.
-
-#### conditional
-One or more conditions are still active and not yet completed.
-
-#### unconditional
-All conditions are complete or waived, and the purchase is moving toward settlement.
-
-#### pre_settlement
-Final tasks before settlement are being completed.
-
-#### settled
-Funds transferred, keys collected, transaction complete.
+- reminders must trigger even if user is inactive
+- reminder scheduling should support workflow orchestration (Temporal)
 
 ---
 
-## 7. Functional Requirements
+## 7. Documents (Evidence)
 
-## 7.1 Create Purchase Workspace
+The system must act as a **source of truth for documents**.
 
-The user must be able to create a purchase workspace with the following fields:
+### Requirements
 
-### Required
-- property address
-- accepted offer date
-- settlement date
+Users must be able to:
+- upload documents
+- associate documents with tasks or workspace
+- view/download documents
 
-### Optional
-- purchase price
-- deposit amount
-
-### Conditions
-User can select one or more standard conditions:
-- finance
-- building_report
-- lim
-- insurance
-- solicitor_approval
-
-### Condition due dates
-For MVP, the system can either:
-- accept explicit due dates, or
-- calculate due dates from defaults
-
-Recommended default offsets from accepted offer date:
-- finance: 5 days
-- building_report: 5 days
-- lim: 10 days
-- insurance: 10 days
-- solicitor_approval: 5 days
-
-### System behaviour on create
-When a purchase is created, the system must:
-1. create the purchase record
-2. create selected condition records
-3. calculate stage
-4. generate tasks from selected conditions
-5. generate standard pre-settlement tasks
-6. return the full purchase summary
+Documents must:
+- belong to a workspace
+- be persistently stored
+- be retrievable at decision points
 
 ---
 
-## 7.2 View Purchase Dashboard
+## 8. Buying Method Behaviour (High Level)
 
-The user must be able to view a dashboard for a purchase showing:
-- property address
-- purchase status / stage
-- accepted offer date
-- settlement date
-- days until settlement
-- active conditions
-- overdue / upcoming condition deadlines
-- next tasks
-- task completion summary
+### Auction
 
-Dashboard goal:
-- give the user a clear understanding of current stage and next required actions
+- buyer must complete preparation before bidding
+- auction represents immediate commitment if won
+- system should emphasise readiness before auction day
 
----
+### Negotiation / Private / Deadline
 
-## 7.3 Conditions Tracking
+- buyer submits offer
+- offer may include conditions
+- if accepted → conditional stage
+- buyer completes conditions before going unconditional
 
-The user must be able to view a list of conditions for a purchase.
+### Tender
 
-For each condition, the system must show:
-- condition type
-- due date
-- status
-- completed date if completed
-
-Condition statuses:
-- pending
-- completed
-- expired
-
-The user must be able to:
-- mark a condition complete
-
-### Stage logic related to conditions
-- If one or more conditions are pending, purchase stage must be conditional
-- If all conditions are completed and settlement has not happened, purchase stage must move to unconditional or pre_settlement based on current logic
+- buyer submits offer without negotiation
+- outcome is delayed
+- if selected → proceeds similar to conditional flow
 
 ---
 
-## 7.4 Tasks
+## 9. Risk & Decision Points
 
-The system must auto-generate tasks.
+The system must highlight **high-risk moments**.
 
-Each task must include:
-- title
-- stage
-- due date optional
-- status
-- linked condition optional
+### Critical Points
 
-Task statuses:
-- pending
-- completed
+- Auction bidding
+- Going unconditional
 
-Task stages:
-- accepted_offer
-- conditional
-- unconditional
-- pre_settlement
-- settlement
+### Requirements
 
-The user must be able to:
-- view tasks grouped by stage
-- mark tasks complete
-- view next upcoming tasks
-
-The user does not need to:
-- re-order tasks
-- assign tasks to other users
-- comment on tasks
-- upload files against tasks in MVP
+At these points:
+- consequences must be clearly explained
+- user must explicitly confirm action
+- system must reduce risk of accidental progression
 
 ---
 
-## 7.5 Stage Progression
+## 10. Dashboard Requirements
 
-The system must support stage progression.
+The workspace dashboard must clearly show:
 
-### Recommended rules
-#### accepted_offer → conditional
-When purchase is created with one or more active conditions
+- current stage
+- next critical date
+- biggest current risk
+- next best action
+- key tasks
+- relevant reminders
 
-#### accepted_offer → pre_settlement
-When purchase is created with no conditions
+### Principle
 
-#### conditional → unconditional
-When all conditions are completed
-
-#### unconditional → pre_settlement
-When all conditions are completed and there are remaining pre-settlement tasks
-
-#### pre_settlement → settled
-When settlement is marked complete
-
-### Manual actions
-User must be able to:
-- mark settlement complete
-
-The system can determine other stage changes automatically.
+The dashboard is **action-oriented**, not just informational.
 
 ---
 
-## 7.6 Purchase Detail View
+## 11. Multi-Workspace Support
 
-The purchase detail page must show:
-- address
-- status
-- accepted offer date
-- settlement date
-- purchase price
-- selected conditions
-- generated tasks
-- progress summary
+Users must be able to:
+
+- manage multiple workspaces
+- see progress across workspaces
+- identify urgency across properties
+- archive workspaces no longer relevant
 
 ---
 
-## 8. Task Generation Requirements
+## 12. Architecture Principles
 
-For MVP, do not build a generic workflow engine.
+These must guide implementation:
 
-Use a simple template-driven approach:
-- selected conditions
-- map to task templates
-- generate task instances
-
-### 8.1 Accepted Offer tasks
-Always generate:
-- Confirm lawyer details
-- Review active conditions
-- Confirm settlement date
-
-### 8.2 Finance condition tasks
-Generate:
-- Submit finance documents
-- Confirm lender approval
-
-### 8.3 Building report condition tasks
-Generate:
-- Book building inspection
-- Review building report
-
-### 8.4 LIM condition tasks
-Generate:
-- Obtain LIM report
-- Review LIM findings
-
-### 8.5 Insurance condition tasks
-Generate:
-- Obtain insurance quote
-- Confirm insurance cover
-
-### 8.6 Solicitor approval condition tasks
-Generate:
-- Send agreement to lawyer
-- Confirm solicitor approval
-
-### 8.7 Pre-settlement tasks
-Always generate:
-- Confirm final loan approval
-- Confirm insurance active from settlement date
-- Complete final inspection
-- Confirm settlement funds ready
-- Confirm key collection details
-
-### 8.8 Settlement tasks
-Always generate:
-- Lawyer confirms settlement
-- Funds transferred
-- Keys collected
+1. Backend (ASP.NET Core + Postgres) is the **source of truth**
+2. Frontend (Next.js) consumes API only
+3. Temporal is used for:
+   - workflow orchestration
+   - timers
+   - reminders
+4. One workflow per workspace
+5. Workflow must not be the only source of truth
+6. All user-visible state must be persisted
 
 ---
 
-## 9. Non-Functional Requirements
+## 13. UX Principles
 
-### 9.1 Architecture
-The MVP must be implemented as:
-- Next.js frontend
-- .NET modular monolith backend
-- Postgres database
+The product must feel:
 
-Do not use:
-- microservices
-- Kafka
-- event sourcing
-- distributed workflow engines
+- calm
+- simple
+- structured
+- reassuring
 
-### 9.2 Performance
-The app should feel responsive for normal consumer use.
-No special scale patterns are required for MVP.
+### Key UX Rules
 
-### 9.3 Maintainability
-Backend modules must be separated logically to allow future growth into:
-- documents
-- contacts
-- notifications
-- marketplace integrations
-
-### 9.4 Security
-Basic good practice only for MVP:
-- validate inputs
-- use server-side API boundaries
-- do not expose internal DB details
-- no auth implementation required yet unless already scaffolded
+- show next action clearly
+- highlight risk without overwhelming
+- use plain English (NZ context)
+- prioritise clarity over density
+- mobile-first design
+- avoid unnecessary complexity
 
 ---
 
-## 10. Backend Domain Requirements
+## 14. Out of Scope (MVP)
 
-## 10.1 Current implementation note
-If Property already exists, the team may continue using Property as the aggregate root for speed.
-
-Longer term this may split into Property and Purchase, but that refactor is not required for MVP.
-
-### Recommended pragmatic model for MVP
-Use Property as the main aggregate, extended to represent the accepted-offer-to-settlement transaction.
-
-Fields:
-- id
-- address
-- accepted_offer_date
-- settlement_date
-- purchase_price nullable
-- deposit_amount nullable
-- status
-- created_at_utc
-
-Associated child entities:
-- conditions
-- tasks
+- bank integrations
+- automated credit decisioning
+- legal advice automation
+- external notifications (email/SMS)
+- property valuation/prediction
 
 ---
 
-## 10.2 Entities
+## 15. Success Criteria
 
-### Property
-Fields:
-- id
-- address
-- accepted_offer_date
-- settlement_date
-- purchase_price
-- deposit_amount
-- status
-- created_at_utc
+The MVP is successful if:
 
-### Condition
-Fields:
-- id
-- property_id
-- type
-- due_date
-- status
-- completed_at_utc nullable
-- created_at_utc
-
-### Task
-Fields:
-- id
-- property_id
-- condition_id nullable
-- title
-- stage
-- due_date nullable
-- status
-- completed_at_utc nullable
-- created_at_utc
+- users complete purchase journeys without losing track
+- deadlines are not missed
+- users understand key risks before critical decisions
+- users actively manage multiple properties
+- users feel more confident during the process
 
 ---
 
-## 10.3 Enums
+## 16. Notes for Engineering Agents
 
-### PropertyStatus
-- accepted_offer
-- conditional
-- unconditional
-- pre_settlement
-- settled
+When implementing:
 
-### ConditionType
-- finance
-- building_report
-- lim
-- insurance
-- solicitor_approval
-
-### ConditionStatus
-- pending
-- completed
-- expired
-
-### TaskStatus
-- pending
-- completed
-
-### TaskStage
-- accepted_offer
-- conditional
-- unconditional
-- pre_settlement
-- settlement
-
----
-
-## 11. API Requirements
-
-Base route:
-- /api/v1
-
-### 11.1 Create Property / Purchase
-POST /api/v1/properties
-
-Request body:
-```json
-{
-  "address": "12 Beach Road, Takapuna",
-  "acceptedOfferDate": "2026-03-16",
-  "settlementDate": "2026-04-30",
-  "purchasePrice": 1200000,
-  "depositAmount": 200000,
-  "conditions": [
-    { "type": "finance", "daysFromAcceptedOffer": 5 },
-    { "type": "building_report", "daysFromAcceptedOffer": 5 },
-    { "type": "lim", "daysFromAcceptedOffer": 10 }
-  ]
-}
-```
-
-Response body:
-```json
-{
-  "id": "guid",
-  "address": "12 Beach Road, Takapuna",
-  "status": "conditional",
-  "acceptedOfferDate": "2026-03-16",
-  "settlementDate": "2026-04-30",
-  "purchasePrice": 1200000,
-  "depositAmount": 200000,
-  "conditions": [
-    {
-      "id": "guid",
-      "type": "finance",
-      "dueDate": "2026-03-21",
-      "status": "pending"
-    }
-  ],
-  "tasks": [
-    {
-      "id": "guid",
-      "title": "Submit finance documents",
-      "stage": "conditional",
-      "status": "pending"
-    }
-  ]
-}
-```
-
-### 11.2 Get Property / Purchase
-GET /api/v1/properties/{id}
-
-Must return:
-- purchase summary
-- conditions
-- tasks
-
-### 11.3 Complete Task
-PATCH /api/v1/tasks/{id}/complete
-
-Must:
-- mark task complete
-- return updated task or success result
-
-### 11.4 Complete Condition
-PATCH /api/v1/conditions/{id}/complete
-
-Must:
-- mark condition complete
-- recalculate purchase stage if needed
-- return updated condition or success result
-
-### 11.5 Mark Settlement Complete
-PATCH /api/v1/properties/{id}/settle
-
-Must:
-- mark purchase settled
-- update status to settled
-
----
-
-## 12. Frontend Requirements
-
-### 12.1 Pages
-
-#### Home page /
-Purpose:
-- lightweight landing page
-- CTA to create purchase
-
-#### Create purchase page /properties/new
-Must include:
-- property address
-- accepted offer date
-- settlement date
-- purchase price optional
-- deposit amount optional
-- condition selection
-
-#### Property detail page /properties/[id]
-Must include:
-- property summary
-- purchase stage
-- days until settlement
-- conditions section
-- tasks section
-- progress indicators
-
----
-
-## 12.2 UX Requirements
-
-The UI must be mobile-first.
-
-The property detail page should answer immediately:
-- What stage am I in?
-- What is due next?
-- How many days until settlement?
-- Which conditions are still pending?
-- What tasks remain?
-
-Recommended sections:
-1. header summary
-2. current stage
-3. condition cards
-4. next tasks
-5. all tasks grouped by stage
-
----
-
-## 12.3 Validation
-
-The frontend must validate:
-- address required
-- accepted offer date required
-- settlement date required
-- settlement date must not be before accepted offer date
-
----
-
-## 13. Agent Build Sequence
-
-Agents should build in this order.
-
-### Agent 1 — Domain and API
-Build:
-- Property extended for accepted-offer-to-settlement lifecycle
-- Condition entity
-- Task entity
-- enums
-- EF Core mappings
-- migrations
-- create/get/complete endpoints
-
-### Agent 2 — Task generation logic
-Build:
-- task template service
-- condition-driven task creation
-- stage determination logic
-
-### Agent 3 — Frontend create flow
-Build:
-- create purchase form
-- condition selection UI
-- POST integration
-
-### Agent 4 — Frontend detail dashboard
-Build:
-- property detail page
-- condition rendering
-- task rendering
-- basic complete task / complete condition actions
-
----
-
-## 14. Acceptance Criteria
-
-The MVP requirement is satisfied when:
-1. User can create a purchase from accepted offer stage
-2. User can select one or more conditions
-3. Backend creates conditions and tasks automatically
-4. Property detail page displays purchase summary
-5. Property detail page displays purchase stage
-6. Property detail page displays condition deadlines
-7. Property detail page displays generated tasks
-8. User can mark a task complete
-9. User can mark a condition complete
-10. Purchase stage updates correctly
-11. User can mark settlement complete
-12. Purchase moves to settled
-
----
-
-## 15. Explicit Simplifications for MVP
-
-To keep agents focused, the following simplifications are intentional:
-- single-user use case
-- one property / purchase flow at a time
-- no collaboration
-- no auth dependency
-- no document storage yet
-- no contact management yet
-- no notifications yet
-- no calendar logic beyond simple date calculation
-- no working day calendar unless team wants to add later; plain day offsets are acceptable for MVP
-
----
-
-## 16. Notes for Agents
-
-- Keep code simple and readable
-- Do not introduce a generic workflow engine
-- Use hard-coded task templates behind a small service interface
-- Do not refactor into microservices
-- Prefer a clean working vertical slice over abstract future-proof frameworks
-- The core product value is conditions + tasks + stage tracking from accepted offer to settlement
+- prefer incremental refactoring over rewrite
+- preserve working behaviour where possible
+- do not assume missing domain concepts
+- align new changes to workspace + workflow model
+- do not put business truth only in workflow state
+- ensure API contracts remain stable or versioned

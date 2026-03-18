@@ -30,10 +30,21 @@ public sealed class TemporalWorkspaceWorkflowOrchestrator(
         var buyingMethod = ToWorkflowBuyingMethod(input.BuyingMethod);
         DateTime? methodSpecificReminderAtUtc = input.BuyingMethod switch
         {
-            BuyingMethod.Auction => input.AcceptedOfferDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(-1).AddHours(9),
-            BuyingMethod.Deadline => input.SettlementDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(-1).AddHours(9),
+            BuyingMethod.Auction when input.AcceptedOfferDate.HasValue =>
+                input.AcceptedOfferDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(-1).AddHours(9),
+            BuyingMethod.Deadline when input.SettlementDate.HasValue =>
+                input.SettlementDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(-1).AddHours(9),
             _ => null
         };
+
+        var settlementReminderAtUtc = input.SettlementDate.HasValue
+            ? input.SettlementDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddHours(9)
+            : (DateTime?)null;
+
+        if (settlementReminderAtUtc is null)
+        {
+            return;
+        }
 
         try
         {
@@ -45,7 +56,7 @@ public sealed class TemporalWorkspaceWorkflowOrchestrator(
                         input.OwnerUserId,
                         buyingMethod,
                         methodSpecificReminderAtUtc,
-                        input.SettlementDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddHours(9),
+                        settlementReminderAtUtc.Value,
                         reminders)),
                 new WorkflowOptions(
                     id: workflowId,
