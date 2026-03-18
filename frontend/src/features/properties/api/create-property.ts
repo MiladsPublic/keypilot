@@ -4,6 +4,7 @@ import { type Property } from "@/features/properties/types/property";
 
 type CreatePropertyRequest = {
   address: string;
+  buyingMethod: string;
   acceptedOfferDate: string;
   settlementDate: string;
   purchasePrice: number | null;
@@ -14,7 +15,7 @@ type CreatePropertyRequest = {
   }>;
 };
 
-const conditionOffsets: Record<string, number> = {
+const fallbackOffsets: Record<string, number> = {
   finance: 5,
   building_report: 5,
   lim: 10,
@@ -22,16 +23,22 @@ const conditionOffsets: Record<string, number> = {
   solicitor_approval: 5
 };
 
-export async function createProperty(values: CreatePropertyFormValues, token?: string | null): Promise<Property> {
+export async function createProperty(
+  values: CreatePropertyFormValues,
+  conditionOffsets?: Record<string, number>,
+  token?: string | null
+): Promise<Property> {
+  const offsets = conditionOffsets ?? fallbackOffsets;
   const conditions = Object.entries(values.conditions)
     .filter(([, selected]) => selected)
     .map(([type]) => ({
       type,
-      daysFromAcceptedOffer: conditionOffsets[type]
+      daysFromAcceptedOffer: offsets[type] ?? 5
     }));
 
   return apiClient.post<Property, CreatePropertyRequest>("/api/v1/properties", {
     address: values.address.trim(),
+    buyingMethod: values.buyingMethod,
     acceptedOfferDate: values.acceptedOfferDate,
     settlementDate: values.settlementDate,
     purchasePrice: values.purchasePrice ? Number(values.purchasePrice) : null,

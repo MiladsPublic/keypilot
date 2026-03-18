@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { type Property } from "@/features/properties/types/property";
-import { badgeVariantForStatus, formatStage } from "@/components/purchase/utils";
+import { badgeVariantForStatus, formatBuyingMethod, formatStage } from "@/components/purchase/utils";
 
 type PurchaseHeroCardProps = {
   property: Property;
@@ -60,7 +60,7 @@ export function PurchaseHeroCard({ property, progressValue, canSelect, propertie
 
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={badgeVariantForStatus(property.status)}>{formatStage(property.status)}</Badge>
-          <p className="text-sm text-ink/70">Purchase stage</p>
+          <Badge variant="secondary">{formatBuyingMethod(property.buyingMethod)}</Badge>
         </div>
 
         <div className="space-y-2">

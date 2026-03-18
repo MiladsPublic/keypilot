@@ -46,5 +46,19 @@ export const apiClient = {
       method: "PATCH",
       body: body === undefined ? undefined : JSON.stringify(body),
       token
-    })
+    }),
+  delete: async (path: string, token?: string | null) => {
+    const response = await fetch(`${config.apiBaseUrl}${path}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new ApiError(response.statusText || "Request failed", response.status);
+    }
+  }
 };

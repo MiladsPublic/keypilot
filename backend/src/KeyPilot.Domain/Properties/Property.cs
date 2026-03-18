@@ -7,6 +7,8 @@ public sealed class Property : AuditableEntity
     private readonly List<Condition> _conditions = [];
     private readonly List<WorkspaceReminder> _reminders = [];
     private readonly List<PropertyTask> _tasks = [];
+    private readonly List<Document> _documents = [];
+    private readonly List<Contact> _contacts = [];
 
     private Property()
     {
@@ -65,6 +67,10 @@ public sealed class Property : AuditableEntity
 
     public IReadOnlyCollection<PropertyTask> Tasks => _tasks;
 
+    public IReadOnlyCollection<Document> Documents => _documents;
+
+    public IReadOnlyCollection<Contact> Contacts => _contacts;
+
     public static Property Create(
         string address,
         DateOnly acceptedOfferDate,
@@ -116,6 +122,29 @@ public sealed class Property : AuditableEntity
         var reminder = WorkspaceReminder.Create(Id, key, title, scheduledForUtc, createdAtUtc);
         _reminders.Add(reminder);
         return reminder;
+    }
+
+    public Document AddDocument(
+        string storageKey,
+        string fileName,
+        string category,
+        DateTime createdAtUtc)
+    {
+        var document = new Document(Id, storageKey, fileName, category, createdAtUtc);
+        _documents.Add(document);
+        return document;
+    }
+
+    public Contact AddContact(
+        string role,
+        string name,
+        string? email,
+        string? phone,
+        DateTime createdAtUtc)
+    {
+        var contact = new Contact(Id, role, name, email, phone, createdAtUtc);
+        _contacts.Add(contact);
+        return contact;
     }
 
     public void MarkSettlementComplete(DateTime settledAtUtc)

@@ -126,6 +126,8 @@ public sealed class OwnershipAuthorizationTests : IClassFixture<WebApplicationFa
             Reminders: Array.Empty<WorkspaceReminderDto>(),
             Conditions: new[] { SeedCondition },
             Tasks: new[] { SeedTask },
+            Documents: Array.Empty<DocumentDto>(),
+            Contacts: Array.Empty<ContactDto>(),
             TaskSummary: new TaskSummaryDto(Completed: 0, Total: 1, Pending: 1),
             ReadinessSummary: new PurchaseReadinessDto(
                 Mode: "conditional",

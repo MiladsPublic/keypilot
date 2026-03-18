@@ -142,6 +142,26 @@ public sealed class ProcessWorkspaceReminderTickHandlerTests
             SaveChangesCalls += 1;
             return Task.FromResult(1);
         }
+
+        public Task<Document?> GetDocumentByIdAsync(Guid id, string ownerUserId, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task<Contact?> GetContactByIdAsync(Guid id, string ownerUserId, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void RemoveDocument(Document document)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void RemoveContact(Contact contact)
+        {
+            throw new NotSupportedException();
+        }
     }
 
     private sealed class WorkspaceLifecycleServiceFake : IWorkspaceLifecycleService

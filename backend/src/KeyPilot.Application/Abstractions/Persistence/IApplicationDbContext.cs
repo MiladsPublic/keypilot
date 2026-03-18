@@ -19,6 +19,14 @@ public interface IApplicationDbContext
 
     Task<PropertyTask?> GetTaskByIdAsync(Guid id, string ownerUserId, CancellationToken cancellationToken);
 
+    Task<Document?> GetDocumentByIdAsync(Guid id, string ownerUserId, CancellationToken cancellationToken);
+
+    Task<Contact?> GetContactByIdAsync(Guid id, string ownerUserId, CancellationToken cancellationToken);
+
+    void RemoveDocument(Document document);
+
+    void RemoveContact(Contact contact);
+
     void AddWorkflowEvent(WorkspaceWorkflowEvent workflowEvent);
 
     Task<bool> WorkflowEventExistsByDeduplicationKeyAsync(string deduplicationKey, CancellationToken cancellationToken);

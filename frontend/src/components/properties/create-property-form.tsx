@@ -2,7 +2,7 @@
 
 import { startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { Home, LoaderCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 
 import { createProperty } from "@/features/properties/api/create-property";
+import { getWorkspaceConfig } from "@/features/properties/api/get-workspace-config";
 import {
   createPropertySchema,
   type CreatePropertyFormValues
@@ -21,20 +22,22 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-const conditionOptions = [
-  { key: "finance", label: "Finance" },
-  { key: "building_report", label: "Building report" },
-  { key: "lim", label: "LIM" },
-  { key: "insurance", label: "Insurance" },
-  { key: "solicitor_approval", label: "Solicitor approval" }
-] as const;
-
 const DRAFT_STORAGE_KEY = "keypilot:create-purchase-draft";
 
 export function CreatePropertyForm() {
   const router = useRouter();
   const { getToken } = useAuth();
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+
+  const configQuery = useQuery({
+    queryKey: ["workspace-config"],
+    queryFn: getWorkspaceConfig,
+    staleTime: 5 * 60 * 1000
+  });
+
+  const conditionOptions = configQuery.data?.conditionDefaults ?? [];
+  const buyingMethodOptions = configQuery.data?.buyingMethods ?? [];
+
   const {
     register,
     handleSubmit,
@@ -46,6 +49,7 @@ export function CreatePropertyForm() {
     resolver: zodResolver(createPropertySchema),
     defaultValues: {
       address: "",
+      buyingMethod: "private_sale",
       acceptedOfferDate: "",
       settlementDate: "",
       purchasePrice: "",
@@ -78,7 +82,10 @@ export function CreatePropertyForm() {
   const mutation = useMutation({
     mutationFn: async (values: CreatePropertyFormValues) => {
       const token = await getToken();
-      return createProperty(values, token);
+      const offsets = Object.fromEntries(
+        (configQuery.data?.conditionDefaults ?? []).map((c) => [c.type, c.daysFromAcceptedOffer])
+      );
+      return createProperty(values, offsets, token);
     },
     onSuccess: (property, values) => {
       window.localStorage.removeItem(DRAFT_STORAGE_KEY);
@@ -114,6 +121,7 @@ export function CreatePropertyForm() {
   });
 
   const conditionsState = watch("conditions");
+  const selectedBuyingMethod = watch("buyingMethod");
 
   return (
     <Card>
@@ -159,6 +167,25 @@ export function CreatePropertyForm() {
           </section>
 
           <section className="space-y-4">
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-ink/65">Buying method</p>
+            <div className="flex flex-wrap gap-2">
+              {buyingMethodOptions.map((option) => (
+                <Button
+                  key={option.value}
+                  type="button"
+                  variant={selectedBuyingMethod === option.value ? "secondary" : "outline"}
+                  className="rounded-full"
+                  onClick={() => setValue("buyingMethod", option.value as CreatePropertyFormValues["buyingMethod"])}
+                >
+                  {option.label}
+                  {selectedBuyingMethod === option.value ? <Badge variant="success">Selected</Badge> : null}
+                </Button>
+              ))}
+            </div>
+            {errors.buyingMethod ? <p className="text-sm text-red-700">{errors.buyingMethod.message}</p> : null}
+          </section>
+
+          <section className="space-y-4">
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-ink/65">Timeline</p>
           <div className="grid gap-5 md:grid-cols-2">
             <label className="block space-y-2">
@@ -183,15 +210,16 @@ export function CreatePropertyForm() {
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-ink/65">Conditions</p>
             <div className="flex flex-wrap gap-2">
               {conditionOptions.map((option) => {
-                const isSelected = conditionsState?.[option.key] ?? false;
+                const key = option.type as keyof CreatePropertyFormValues["conditions"];
+                const isSelected = conditionsState?.[key] ?? false;
 
                 return (
                   <Button
-                    key={option.key}
+                    key={option.type}
                     type="button"
                     variant={isSelected ? "secondary" : "outline"}
                     className="rounded-full"
-                    onClick={() => setValue(`conditions.${option.key}`, !isSelected)}
+                    onClick={() => setValue(`conditions.${key}`, !isSelected)}
                   >
                     {option.label}
                     {isSelected ? <Badge variant="success">Selected</Badge> : null}

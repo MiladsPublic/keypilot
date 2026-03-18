@@ -21,6 +21,8 @@ public sealed record CreatePropertyResponse(
     IReadOnlyCollection<WorkspaceReminderDto> Reminders,
     IReadOnlyCollection<ConditionDto> Conditions,
     IReadOnlyCollection<TaskDto> Tasks,
+    IReadOnlyCollection<DocumentDto> Documents,
+    IReadOnlyCollection<ContactDto> Contacts,
     TaskSummaryDto TaskSummary,
     PurchaseReadinessDto ReadinessSummary,
     DateTime CreatedAtUtc)
@@ -55,6 +57,14 @@ public sealed record CreatePropertyResponse(
                 .ThenBy(task => task.DueDate)
                 .ThenBy(task => task.Title)
                 .Select(TaskDto.FromTask)
+                .ToArray(),
+            property.Documents
+                .OrderBy(document => document.CreatedAtUtc)
+                .Select(DocumentDto.FromDocument)
+                .ToArray(),
+            property.Contacts
+                .OrderBy(contact => contact.Name)
+                .Select(ContactDto.FromContact)
                 .ToArray(),
             PropertyMvpDtoMapper.TaskSummary(property),
             PropertyMvpDtoMapper.ReadinessSummary(property, today),

@@ -14,6 +14,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<WorkspaceWorkflowEvent> WorkflowEvents => Set<WorkspaceWorkflowEvent>();
     public DbSet<WorkspaceWorkflowInstance> WorkflowInstances => Set<WorkspaceWorkflowInstance>();
     public DbSet<PropertyTask> Tasks => Set<PropertyTask>();
+    public DbSet<Document> Documents => Set<Document>();
+    public DbSet<Contact> Contacts => Set<Contact>();
 
     public async Task AddPropertyAsync(Property property, CancellationToken cancellationToken)
     {
@@ -27,6 +29,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             .Include(property => property.Conditions)
             .Include(property => property.Reminders)
             .Include(property => property.Tasks)
+            .Include(property => property.Documents)
+            .Include(property => property.Contacts)
             .ToArrayAsync(cancellationToken);
     }
 
@@ -36,6 +40,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             .Include(property => property.Conditions)
             .Include(property => property.Reminders)
             .Include(property => property.Tasks)
+            .Include(property => property.Documents)
+            .Include(property => property.Contacts)
             .SingleOrDefaultAsync(property => property.Id == id && property.OwnerUserId == ownerUserId, cancellationToken);
     }
 
@@ -45,6 +51,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             .Include(property => property.Conditions)
             .Include(property => property.Reminders)
             .Include(property => property.Tasks)
+            .Include(property => property.Documents)
+            .Include(property => property.Contacts)
             .SingleOrDefaultAsync(property => property.WorkspaceId == workspaceId, cancellationToken);
     }
 
@@ -80,6 +88,42 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             .Where(result => result.task.Id == id && result.property.OwnerUserId == ownerUserId)
             .Select(result => result.task)
             .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public Task<Document?> GetDocumentByIdAsync(Guid id, string ownerUserId, CancellationToken cancellationToken)
+    {
+        return Documents
+            .Join(
+                Properties,
+                document => document.PropertyId,
+                property => property.Id,
+                (document, property) => new { document, property })
+            .Where(result => result.document.Id == id && result.property.OwnerUserId == ownerUserId)
+            .Select(result => result.document)
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public Task<Contact?> GetContactByIdAsync(Guid id, string ownerUserId, CancellationToken cancellationToken)
+    {
+        return Contacts
+            .Join(
+                Properties,
+                contact => contact.PropertyId,
+                property => property.Id,
+                (contact, property) => new { contact, property })
+            .Where(result => result.contact.Id == id && result.property.OwnerUserId == ownerUserId)
+            .Select(result => result.contact)
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public void RemoveDocument(Document document)
+    {
+        Documents.Remove(document);
+    }
+
+    public void RemoveContact(Contact contact)
+    {
+        Contacts.Remove(contact);
     }
 
     public void AddWorkflowEvent(WorkspaceWorkflowEvent workflowEvent)

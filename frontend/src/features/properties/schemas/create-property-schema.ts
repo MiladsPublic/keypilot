@@ -3,9 +3,12 @@ import { z } from "zod";
 const requiredDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD");
 const optionalMoney = z.string().regex(/^\d+(\.\d{1,2})?$/, "Use a valid amount").or(z.literal(""));
 
+const buyingMethods = ["private_sale", "auction", "negotiation", "tender", "deadline"] as const;
+
 export const createPropertySchema = z
   .object({
     address: z.string().trim().min(3, "Address is required"),
+    buyingMethod: z.enum(buyingMethods, { message: "Select a buying method" }),
     acceptedOfferDate: requiredDate,
     settlementDate: requiredDate,
     purchasePrice: optionalMoney.optional(),

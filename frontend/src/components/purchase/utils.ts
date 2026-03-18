@@ -1,5 +1,12 @@
 import { type Property } from "@/features/properties/types/property";
 
+export function formatBuyingMethod(value: string) {
+  return value
+    .split("_")
+    .map((part) => part[0].toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 export const timelineStages = [
   "accepted_offer",
   "conditional",

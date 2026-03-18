@@ -89,6 +89,16 @@ public sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
             .HasForeignKey(task => task.PropertyId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasMany(property => property.Documents)
+            .WithOne()
+            .HasForeignKey(document => document.PropertyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(property => property.Contacts)
+            .WithOne()
+            .HasForeignKey(contact => contact.PropertyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasIndex(property => property.OwnerUserId);
     }
 }

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
-import { CalendarClock, FileText, Users } from "lucide-react";
+import { CalendarClock, FileText, Plus, Trash2, Users } from "lucide-react";
 
 import { completeCondition } from "@/features/properties/api/complete-condition";
 import { completeTask } from "@/features/properties/api/complete-task";
@@ -12,6 +12,10 @@ import { settleProperty } from "@/features/properties/api/settle-property";
 import { cancelProperty } from "@/features/properties/api/cancel-property";
 import { waiveCondition } from "@/features/properties/api/waive-condition";
 import { failCondition } from "@/features/properties/api/fail-condition";
+import { addDocument, type AddDocumentBody } from "@/features/properties/api/add-document";
+import { deleteDocument } from "@/features/properties/api/delete-document";
+import { addContact, type AddContactBody } from "@/features/properties/api/add-contact";
+import { deleteContact } from "@/features/properties/api/delete-contact";
 import { type Condition, type Property, type PropertyTask } from "@/features/properties/types/property";
 import { ConditionsCard, type ConditionAction } from "@/components/purchase/conditions-card";
 import { ProgressCard } from "@/components/purchase/progress-card";
@@ -19,6 +23,7 @@ import { PurchaseHeroCard } from "@/components/purchase/purchase-hero-card";
 import { StageTimeline } from "@/components/purchase/stage-timeline";
 import { TaskList } from "@/components/purchase/task-list";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -46,6 +51,8 @@ export function PropertySummaryCard({ property }: { property: Property }) {
 
   const [settleDialogOpen, setSettleDialogOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [addDocDialogOpen, setAddDocDialogOpen] = useState(false);
+  const [addContactDialogOpen, setAddContactDialogOpen] = useState(false);
   const [localProperty, setLocalProperty] = useState(property);
 
   const taskMutation = useMutation({
@@ -139,6 +146,52 @@ export function PropertySummaryCard({ property }: { property: Property }) {
         description: `Couldn't cancel ${localProperty.address}.`,
         variant: "danger"
       });
+    }
+  });
+
+  const addDocumentMutation = useMutation({
+    mutationFn: async (body: AddDocumentBody) => addDocument(localProperty.id, body, await getToken()),
+    onSuccess: (doc) => {
+      setLocalProperty((prev) => ({ ...prev, documents: [...prev.documents, doc] }));
+      setAddDocDialogOpen(false);
+      toast({ title: "Document added", description: doc.fileName, variant: "success" });
+    },
+    onError: () => {
+      toast({ title: "Couldn't add document", variant: "danger" });
+    }
+  });
+
+  const deleteDocumentMutation = useMutation({
+    mutationFn: async (id: string) => { await deleteDocument(id, await getToken()); return id; },
+    onSuccess: (id) => {
+      setLocalProperty((prev) => ({ ...prev, documents: prev.documents.filter((d) => d.id !== id) }));
+      toast({ title: "Document removed", variant: "success" });
+    },
+    onError: () => {
+      toast({ title: "Couldn't remove document", variant: "danger" });
+    }
+  });
+
+  const addContactMutation = useMutation({
+    mutationFn: async (body: AddContactBody) => addContact(localProperty.id, body, await getToken()),
+    onSuccess: (contact) => {
+      setLocalProperty((prev) => ({ ...prev, contacts: [...prev.contacts, contact] }));
+      setAddContactDialogOpen(false);
+      toast({ title: "Contact added", description: contact.name, variant: "success" });
+    },
+    onError: () => {
+      toast({ title: "Couldn't add contact", variant: "danger" });
+    }
+  });
+
+  const deleteContactMutation = useMutation({
+    mutationFn: async (id: string) => { await deleteContact(id, await getToken()); return id; },
+    onSuccess: (id) => {
+      setLocalProperty((prev) => ({ ...prev, contacts: prev.contacts.filter((c) => c.id !== id) }));
+      toast({ title: "Contact removed", variant: "success" });
+    },
+    onError: () => {
+      toast({ title: "Couldn't remove contact", variant: "danger" });
     }
   });
 
@@ -304,21 +357,168 @@ export function PropertySummaryCard({ property }: { property: Property }) {
 
         <TabsContent value="documents">
           <div className="rounded-2xl border border-line bg-white p-6">
-            <p className="inline-flex items-center gap-2 text-lg font-semibold">
-              <FileText className="h-5 w-5" />
-              Documents
-            </p>
-            <p className="mt-2 text-sm text-ink/70">Document support is coming soon.</p>
+            <div className="flex items-center justify-between">
+              <p className="inline-flex items-center gap-2 text-lg font-semibold">
+                <FileText className="h-5 w-5" />
+                Documents ({localProperty.documents.length})
+              </p>
+              <Dialog open={addDocDialogOpen} onOpenChange={setAddDocDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="rounded-full">
+                    <Plus className="mr-1 h-4 w-4" /> Add
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add document</DialogTitle>
+                    <DialogDescription>Record a document reference for this property.</DialogDescription>
+                  </DialogHeader>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const form = e.currentTarget;
+                      const data = new FormData(form);
+                      addDocumentMutation.mutate({
+                        storageKey: data.get("storageKey") as string,
+                        fileName: data.get("fileName") as string,
+                        category: data.get("category") as string
+                      });
+                    }}
+                    className="space-y-4"
+                  >
+                    <div>
+                      <label htmlFor="doc-fileName" className="mb-1 block text-sm font-medium">File name</label>
+                      <Input id="doc-fileName" name="fileName" required placeholder="contract-v2.pdf" />
+                    </div>
+                    <div>
+                      <label htmlFor="doc-category" className="mb-1 block text-sm font-medium">Category</label>
+                      <Input id="doc-category" name="category" required placeholder="contract" />
+                    </div>
+                    <div>
+                      <label htmlFor="doc-storageKey" className="mb-1 block text-sm font-medium">Storage key</label>
+                      <Input id="doc-storageKey" name="storageKey" required placeholder="uploads/contract-v2.pdf" />
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit" className="rounded-full" disabled={addDocumentMutation.isPending}>
+                        Add document
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {localProperty.documents.length === 0 ? (
+              <p className="mt-4 text-sm text-ink/70">No documents yet.</p>
+            ) : (
+              <ul className="mt-4 divide-y divide-line">
+                {localProperty.documents.map((doc) => (
+                  <li key={doc.id} className="flex items-center justify-between py-3">
+                    <div>
+                      <p className="text-sm font-medium">{doc.fileName}</p>
+                      <p className="text-xs text-ink/60">{doc.category}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-ink/50 hover:text-red-600"
+                      disabled={deleteDocumentMutation.isPending}
+                      onClick={() => deleteDocumentMutation.mutate(doc.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </TabsContent>
 
         <TabsContent value="contacts">
           <div className="rounded-2xl border border-line bg-white p-6">
-            <p className="inline-flex items-center gap-2 text-lg font-semibold">
-              <Users className="h-5 w-5" />
-              Contacts
-            </p>
-            <p className="mt-2 text-sm text-ink/70">Contact management is coming soon.</p>
+            <div className="flex items-center justify-between">
+              <p className="inline-flex items-center gap-2 text-lg font-semibold">
+                <Users className="h-5 w-5" />
+                Contacts ({localProperty.contacts.length})
+              </p>
+              <Dialog open={addContactDialogOpen} onOpenChange={setAddContactDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="rounded-full">
+                    <Plus className="mr-1 h-4 w-4" /> Add
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add contact</DialogTitle>
+                    <DialogDescription>Add a contact related to this property.</DialogDescription>
+                  </DialogHeader>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const form = e.currentTarget;
+                      const data = new FormData(form);
+                      addContactMutation.mutate({
+                        role: data.get("role") as string,
+                        name: data.get("name") as string,
+                        email: (data.get("email") as string) || null,
+                        phone: (data.get("phone") as string) || null
+                      });
+                    }}
+                    className="space-y-4"
+                  >
+                    <div>
+                      <label htmlFor="contact-name" className="mb-1 block text-sm font-medium">Name</label>
+                      <Input id="contact-name" name="name" required placeholder="Jane Smith" />
+                    </div>
+                    <div>
+                      <label htmlFor="contact-role" className="mb-1 block text-sm font-medium">Role</label>
+                      <Input id="contact-role" name="role" required placeholder="solicitor" />
+                    </div>
+                    <div>
+                      <label htmlFor="contact-email" className="mb-1 block text-sm font-medium">Email</label>
+                      <Input id="contact-email" name="email" type="email" placeholder="jane@example.com" />
+                    </div>
+                    <div>
+                      <label htmlFor="contact-phone" className="mb-1 block text-sm font-medium">Phone</label>
+                      <Input id="contact-phone" name="phone" type="tel" placeholder="+64 21 123 4567" />
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit" className="rounded-full" disabled={addContactMutation.isPending}>
+                        Add contact
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {localProperty.contacts.length === 0 ? (
+              <p className="mt-4 text-sm text-ink/70">No contacts yet.</p>
+            ) : (
+              <ul className="mt-4 divide-y divide-line">
+                {localProperty.contacts.map((contact) => (
+                  <li key={contact.id} className="flex items-center justify-between py-3">
+                    <div>
+                      <p className="text-sm font-medium">{contact.name}</p>
+                      <p className="text-xs text-ink/60">
+                        {contact.role}
+                        {contact.email ? ` · ${contact.email}` : ""}
+                        {contact.phone ? ` · ${contact.phone}` : ""}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-ink/50 hover:text-red-600"
+                      disabled={deleteContactMutation.isPending}
+                      onClick={() => deleteContactMutation.mutate(contact.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </TabsContent>
       </Tabs>
